@@ -17,6 +17,8 @@ Projet réalisé dans le cadre de la mission **« Pilotez le développement d'un
 
 Mise en place initiale du dépôt : documentation minimale et règles d’ignorance Git. Le code applicatif viendra dans les prochains commits.
 
+Pour le **cahier des charges et le périmètre MVP**, voir [`docs/CONTEXTE.md`](docs/CONTEXTE.md).
+
 ## Prochaines étapes
 
 - Définir l’architecture et le modèle de données
