@@ -1,0 +1,350 @@
+openapi: 3.0.3
+
+info:
+  title: DataShare API
+  description: API REST pour la plateforme de transfert sécurisé de fichiers DataShare.
+  version: 1.0.0
+  contact:
+    name: DataShare
+
+servers:
+  - url: http://localhost:8000/api
+    description: Serveur de développement
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: john_doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+
+    RegisterRequest:
+      type: object
+      required: [username, email, password, password2]
+      properties:
+        username:
+          type: string
+          example: john_doe
+        email:
+          type: string
+          format: email
+          example: john@example.com
+        password:
+          type: string
+          format: password
+          example: StrongPass123!
+        password2:
+          type: string
+          format: password
+          example: StrongPass123!
+
+    LoginRequest:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+          example: john_doe
+        password:
+          type: string
+          format: password
+          example: StrongPass123!
+
+    TokenPair:
+      type: object
+      properties:
+        access:
+          type: string
+          description: JWT access token (valide 1 heure)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        refresh:
+          type: string
+          description: JWT refresh token (valide 7 jours)
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+    SharedFile:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        original_name:
+          type: string
+          example: rapport_annuel.pdf
+        size:
+          type: integer
+          description: Taille en octets
+          example: 2621440
+        content_type:
+          type: string
+          example: application/pdf
+        share_token:
+          type: string
+          format: uuid
+          example: 7f9d6a3b-1c2e-4f5a-8b9d-0e1f2a3b4c5d
+        share_url:
+          type: string
+          format: uri
+          example: http://localhost:5173/download/7f9d6a3b-1c2e-4f5a-8b9d-0e1f2a3b4c5d
+        expires_at:
+          type: string
+          format: date-time
+          example: "2026-04-25T14:00:00Z"
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-04-24T14:00:00Z"
+        is_expired:
+          type: boolean
+          example: false
+
+    FilePublicInfo:
+      type: object
+      properties:
+        original_name:
+          type: string
+          example: rapport_annuel.pdf
+        size:
+          type: integer
+          example: 2621440
+        content_type:
+          type: string
+          example: application/pdf
+        expires_at:
+          type: string
+          format: date-time
+        is_expired:
+          type: boolean
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: Non trouvé.
+
+paths:
+
+  # ── Authentification ──────────────────────────────────────────
+  /auth/register/:
+    post:
+      tags: [Authentification]
+      summary: Créer un compte
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Compte créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Données invalides (mot de passe faible, doublon, etc.)
+
+  /auth/login/:
+    post:
+      tags: [Authentification]
+      summary: Connexion — obtenir un couple access/refresh token
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '401':
+          description: Identifiants invalides
+
+  /auth/token/refresh/:
+    post:
+      tags: [Authentification]
+      summary: Rafraîchir le token d'accès
+      operationId: tokenRefresh
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refresh:
+                  type: string
+      responses:
+        '200':
+          description: Nouveau token d'accès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+        '401':
+          description: Refresh token invalide ou expiré
+
+  /auth/me/:
+    get:
+      tags: [Authentification]
+      summary: Récupérer le profil de l'utilisateur connecté
+      operationId: getMe
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profil utilisateur
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Non authentifié
+
+  # ── Fichiers ──────────────────────────────────────────────────
+  /files/:
+    get:
+      tags: [Fichiers]
+      summary: Lister mes fichiers
+      operationId: listFiles
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Liste des fichiers de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SharedFile'
+        '401':
+          description: Non authentifié
+
+  /files/upload/:
+    post:
+      tags: [Fichiers]
+      summary: Uploader un fichier
+      operationId: uploadFile
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Fichier uploadé, lien de partage généré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SharedFile'
+        '400':
+          description: Aucun fichier fourni
+        '401':
+          description: Non authentifié
+        '413':
+          description: Fichier trop grand (max 50 Mo)
+
+  /files/{id}/delete/:
+    delete:
+      tags: [Fichiers]
+      summary: Supprimer un fichier
+      operationId: deleteFile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Fichier supprimé
+        '401':
+          description: Non authentifié
+        '404':
+          description: Fichier non trouvé ou n'appartient pas à l'utilisateur
+
+  /files/share/{token}/:
+    get:
+      tags: [Partage]
+      summary: Infos publiques d'un fichier partagé (sans téléchargement)
+      operationId: getFileInfo
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Infos publiques du fichier
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FilePublicInfo'
+        '404':
+          description: Fichier non trouvé
+
+  /files/download/{token}/:
+    get:
+      tags: [Partage]
+      summary: Télécharger un fichier via son lien de partage
+      operationId: downloadFile
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Contenu du fichier
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Fichier non trouvé
+        '410':
+          description: Lien expiré
