@@ -130,3 +130,50 @@ MAX_FILE_SIZE = 52_428_800
 
 # Durée de validité par défaut des liens de partage (en heures)
 SHARE_LINK_EXPIRY_HOURS = int(os.environ.get('SHARE_LINK_EXPIRY_HOURS', 24))
+
+# ── Logs structurés ───────────────────────────────────────────────────────────
+# Chaque requête et chaque erreur est loggée avec timestamp, niveau et module.
+# En production, rediriger vers un agrégateur (ex. Datadog, Sentry, ELK).
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'structured': {
+            # Format lisible par des outils d'analyse (timestamp ISO + niveau + message)
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%dT%H:%M:%S',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'structured',
+        },
+    },
+    'loggers': {
+        # Logs applicatifs DataShare (upload, download, auth)
+        'files': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # Requêtes Django entrantes
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        # Erreurs BDD
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+    },
+}
