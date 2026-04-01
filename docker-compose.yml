@@ -27,7 +27,7 @@ services:
       DB_PASSWORD: datashare
       DB_HOST: db
       DB_PORT: "5432"
-      ALLOWED_HOSTS: "localhost,127.0.0.1,backend"
+      ALLOWED_HOSTS: "localhost,127.0.0.1,backend,0.0.0.0"
       CORS_ALLOWED_ORIGINS: "http://localhost:5173,http://127.0.0.1:5173"
       SHARE_LINK_EXPIRY_HOURS: "24"
     volumes:
@@ -51,7 +51,7 @@ services:
     ports:
       - "5173:5173"
     environment:
-      VITE_API_URL: "http://localhost:8000"
+      VITE_API_URL: "http://backend:8000"
     depends_on:
       - backend
 
