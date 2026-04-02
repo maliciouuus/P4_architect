@@ -1,9 +1,26 @@
+<!--
+  Composant racine de l'application Vue.js.
+
+  Ce composant est le point d'entrée du rendu — il est monté dans le div#app
+  de index.html. Il contient uniquement le <router-view> qui affiche la page
+  correspondant à la route active, et les styles CSS globaux utilisés
+  par toutes les pages (variables de design, boutons, champs, alertes).
+
+  La navbar et la sidebar ne sont pas ici : chaque vue gère son propre header
+  pour s'adapter à son contexte (guest vs authentifié, mobile vs desktop).
+-->
 <template>
   <div id="app">
+    <!-- La vue active (Home, Login, Register, Dashboard, Download) est rendue ici -->
     <router-view />
   </div>
 </template>
 
+<!--
+  Styles globaux — disponibles dans tous les composants enfants.
+  On utilise des variables CSS (:root) pour centraliser les tokens de design
+  extraits du Figma : gradient, couleurs, rayons, typographie.
+-->
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Inter:wght@400;600&display=swap');
 
