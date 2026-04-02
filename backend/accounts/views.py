@@ -1,10 +1,14 @@
 """Vues de l'application accounts — inscription et profil utilisateur."""
 
+import logging
+
 from rest_framework import generics, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .serializers import RegisterSerializer, UserSerializer
+
+logger = logging.getLogger('accounts')
 
 
 class RegisterView(generics.CreateAPIView):
@@ -16,8 +20,12 @@ class RegisterView(generics.CreateAPIView):
     """
 
     serializer_class = RegisterSerializer
-    # On autorise tout le monde — c'est la page d'inscription
     permission_classes = [permissions.AllowAny]
+
+    def perform_create(self, serializer):
+        """Crée l'utilisateur et logue l'événement."""
+        user = serializer.save()
+        logger.info('Nouvel utilisateur inscrit — username=%s', user.username)
 
 
 class MeView(APIView):
