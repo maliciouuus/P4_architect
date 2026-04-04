@@ -1,5 +1,7 @@
 """Vues de l'application files — endpoints de l'API REST pour les fichiers."""
 
+import logging
+
 from django.conf import settings
 from django.http import FileResponse, Http404
 from django.utils import timezone
@@ -7,6 +9,9 @@ from rest_framework import generics, permissions, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+# Logger dédié à l'application files — configuré dans settings.LOGGING
+logger = logging.getLogger('files')
 
 from .models import SharedFile
 from .serializers import (
@@ -76,6 +81,15 @@ class FileUploadView(APIView):
         shared_file.set_password(raw_password)
         shared_file.file = uploaded
         shared_file.save()
+
+        logger.info(
+            'Fichier uploadé — user=%s fichier="%s" taille=%d expiration=%s protégé=%s',
+            request.user.username,
+            uploaded.name,
+            uploaded.size,
+            expires_at.isoformat(),
+            bool(raw_password),
+        )
 
         return Response(
             SharedFileSerializer(shared_file, context={'request': request}).data,
@@ -151,6 +165,13 @@ class FileDownloadView(APIView):
                     {'detail': 'Mot de passe incorrect.'},
                     status=status.HTTP_403_FORBIDDEN,
                 )
+
+        logger.info(
+            'Téléchargement — token=%s fichier="%s" user=%s',
+            token,
+            shared_file.original_name,
+            'anonyme',
+        )
 
         # FileResponse streame le fichier sans le charger entièrement en mémoire
         return FileResponse(
