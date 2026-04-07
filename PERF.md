@@ -62,19 +62,44 @@ Date : 2026-04-24
 
 ---
 
-## Budget de performance front (Lighthouse)
+## Budget de performance front — Build de production
 
-Métriques estimées en développement local :
+Résultats mesurés avec `npm run build` (Vite, minification + tree-shaking activés) :
 
-| Métrique | Valeur estimée |
+| Fichier | Taille brute | Taille gzip |
+|---|---|---|
+| `index.js` (vendors Vue + Pinia + Axios + Router) | **139 Ko** | **54 Ko** |
+| `DashboardView.js` | 10 Ko | 3.9 Ko |
+| `DownloadView.js` | 4.8 Ko | 1.9 Ko |
+| `RegisterView.js` | 2.3 Ko | 1.2 Ko |
+| `LoginView.js` | 1.8 Ko | 1.0 Ko |
+| `HomeView.js` | 1.2 Ko | 0.7 Ko |
+| **Total JS** | **~160 Ko** | **~63 Ko** |
+| **Total CSS** | ~13 Ko | ~4.3 Ko |
+
+**Build réalisé en 1.20s.**
+
+### Analyse
+
+Le bundle vendor de 139 Ko (54 Ko gzip) contient Vue.js 3, Pinia, Vue Router et Axios — ce sont des dépendances incontournables. Le code applicatif est très léger grâce au **code splitting automatique** par route (lazy loading).
+
+### Métriques navigateur estimées (Lighthouse)
+
+| Métrique | Estimation |
 |---|---|
-| First Contentful Paint | < 1s |
-| Largest Contentful Paint | < 2s |
-| Time to Interactive | < 2s |
-| Bundle JS (non minifié, dev) | ~350 Ko |
-| Bundle JS (production build) | ~120 Ko estimé |
+| First Contentful Paint (FCP) | < 1s |
+| Largest Contentful Paint (LCP) | < 2s |
+| Time to Interactive (TTI) | < 2s |
+| Performance Score | > 90 |
 
-En production, lancer `npm run build` et servir les fichiers statiques via nginx.
+### Actions d'optimisation possibles
+
+| Action | Gain estimé |
+|---|---|
+| Servir via nginx (gzip/Brotli) | -50% taille transfert |
+| Activer `Cache-Control` sur les assets | Rechargements quasi nuls |
+| Lazy load des polices Google Fonts | -200ms FCP |
+| Migrer vers `<link rel="preload">` pour les fonts | -100ms LCP |
 
 ---
 
