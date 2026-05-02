@@ -29,3 +29,20 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Claude Code
+.claude/
+
+# Pytest cache
+.pytest_cache/
+e2e/.pytest_cache/
+
+# Coverage
+.coverage
+htmlcov/
+
+# Venv E2E
+e2e/venv/
+
+# Fichiers générés intermédiaires
+docs/slides.pdf
