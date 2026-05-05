@@ -2,6 +2,7 @@
 """Convertit un fichier Markdown en PDF via weasyprint."""
 
 import sys
+from pathlib import Path
 import markdown
 from weasyprint import HTML, CSS
 
@@ -116,7 +117,7 @@ def convert(md_path, pdf_path):
 <body>{html_body}</body>
 </html>"""
 
-    HTML(string=html).write_pdf(
+    HTML(string=html, base_url=str(Path(md_path).parent.resolve())).write_pdf(
         pdf_path,
         stylesheets=[CSS(string=CSS_STYLE)],
     )

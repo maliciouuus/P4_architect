@@ -26,41 +26,7 @@
 
 DataShare suit une architecture **client-serveur découplée** : un frontend SPA (Single Page Application) communique avec un backend API REST via HTTP/JSON. Les deux sont containerisés et orchestrés avec Docker Compose.
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                     Navigateur                          │
-│                                                         │
-│   ┌─────────────────────────────────────────────────┐   │
-│   │           Vue.js 3 SPA (port 5173)              │   │
-│   │  ┌──────────┐ ┌──────────┐ ┌────────────────┐  │   │
-│   │  │  Router  │ │  Pinia   │ │  Vues / Compos │  │   │
-│   │  │ (pages)  │ │ (stores) │ │  Home / Login  │  │   │
-│   │  │          │ │auth/files│ │  Dashboard     │  │   │
-│   │  └──────────┘ └──────────┘ │  Download      │  │   │
-│   │         Axios (client API) └────────────────┘  │   │
-│   └──────────────────┬──────────────────────────────┘   │
-└─────────────────────┼───────────────────────────────────┘
-                      │ HTTP/JSON (REST)
-                      │ JWT dans header Authorization
-┌─────────────────────▼───────────────────────────────────┐
-│            Django + DRF (port 8000)                     │
-│                                                         │
-│  ┌─────────────┐   ┌──────────────────────────────────┐ │
-│  │  accounts   │   │            files                 │ │
-│  │  /register  │   │  /upload  /list  /delete         │ │
-│  │  /login     │   │  /share/<token>  /download/<tok> │ │
-│  │  /me        │   └──────────────────────────────────┘ │
-│  └─────────────┘                                        │
-│       JWT (simplejwt)    ORM Django                     │
-└────────────────┬───────────────────┬────────────────────┘
-                 │                   │
-    ┌────────────▼──────┐   ┌────────▼──────────┐
-    │  PostgreSQL 16    │   │  Disque local     │
-    │  (port 5433)      │   │  /media/uploads/  │
-    │  Users            │   │  (fichiers)       │
-    │  SharedFiles      │   │                   │
-    └───────────────────┘   └───────────────────┘
-```
+![Diagramme d'architecture DataShare](architecture_diagram.png)
 
 ### Flux principaux
 

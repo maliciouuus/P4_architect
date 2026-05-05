@@ -63,7 +63,7 @@ class FileUploadView(APIView):
         # mais on ne fait jamais confiance au seul contrôle frontend
         if uploaded.size > settings.MAX_FILE_SIZE:
             return Response(
-                {'detail': 'Le fichier dépasse la taille maximale autorisée (50 Mo).'},
+                {'detail': 'Le fichier dépasse la taille maximale autorisée (1 Go).'},
                 status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             )
 

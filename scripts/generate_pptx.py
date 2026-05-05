@@ -2,413 +2,716 @@
 """Génère le support de présentation DataShare au format PowerPoint."""
 
 from pptx import Presentation
-from pptx.util import Inches, Pt, Emu
+from pptx.util import Inches, Pt
 from pptx.dml.color import RGBColor
 from pptx.enum.text import PP_ALIGN
-from pptx.util import Inches, Pt
 
-# Palette DataShare
-ORANGE = RGBColor(0xFF, 0x81, 0x2D)
+# ── Palette DataShare ─────────────────────────────────────────────────────────
+ORANGE      = RGBColor(0xFF, 0x81, 0x2D)
 ORANGE_DARK = RGBColor(0xDE, 0x62, 0x62)
-DARK = RGBColor(0x1A, 0x1A, 0x1A)
-WHITE = RGBColor(0xFF, 0xFF, 0xFF)
-LIGHT_GRAY = RGBColor(0xF5, 0xF5, 0xF5)
-GRAY = RGBColor(0x75, 0x75, 0x75)
-ACCENT = RGBColor(0xFF, 0xB8, 0x8C)
+DARK        = RGBColor(0x1A, 0x1A, 0x1A)
+WHITE       = RGBColor(0xFF, 0xFF, 0xFF)
+LIGHT_GRAY  = RGBColor(0xF5, 0xF5, 0xF5)
+GRAY        = RGBColor(0x75, 0x75, 0x75)
+ACCENT      = RGBColor(0xFF, 0xB8, 0x8C)
+GREEN       = RGBColor(0x16, 0xA3, 0x4A)
+GREEN_L     = RGBColor(0xD4, 0xED, 0xDA)
+GREEN_DARK  = RGBColor(0x15, 0x5A, 0x24)
+RED         = RGBColor(0xDC, 0x26, 0x26)
+RED_L       = RGBColor(0xFE, 0xE2, 0xE2)
+BLUE        = RGBColor(0x25, 0x63, 0xEB)
+BLUE_L      = RGBColor(0xDB, 0xEA, 0xFE)
+CARD_BG     = RGBColor(0xFF, 0xF3, 0xEB)
 
 prs = Presentation()
-prs.slide_width = Inches(13.33)
+prs.slide_width  = Inches(13.33)
 prs.slide_height = Inches(7.5)
-
-BLANK = prs.slide_layouts[6]  # Layout vide
-
-
-def add_rect(slide, left, top, width, height, color, transparency=0):
-    shape = slide.shapes.add_shape(1, Inches(left), Inches(top), Inches(width), Inches(height))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = color
-    shape.line.fill.background()
-    return shape
+BLANK = prs.slide_layouts[6]
 
 
-def add_text(slide, text, left, top, width, height,
-             font_size=18, bold=False, color=DARK,
-             align=PP_ALIGN.LEFT, italic=False):
-    txBox = slide.shapes.add_textbox(
-        Inches(left), Inches(top), Inches(width), Inches(height)
-    )
-    tf = txBox.text_frame
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def rect(slide, left, top, width, height, color, border_color=None, border_pt=0):
+    s = slide.shapes.add_shape(1,
+        Inches(left), Inches(top), Inches(width), Inches(height))
+    s.fill.solid()
+    s.fill.fore_color.rgb = color
+    if border_color and border_pt:
+        s.line.color.rgb = border_color
+        s.line.width = Pt(border_pt)
+    else:
+        s.line.fill.background()
+    return s
+
+
+def txt(slide, text, left, top, width, height,
+        size=14, bold=False, color=DARK, align=PP_ALIGN.LEFT, italic=False):
+    tb = slide.shapes.add_textbox(
+        Inches(left), Inches(top), Inches(width), Inches(height))
+    tf = tb.text_frame
     tf.word_wrap = True
     p = tf.paragraphs[0]
     p.alignment = align
-    run = p.add_run()
-    run.text = text
-    run.font.size = Pt(font_size)
-    run.font.bold = bold
-    run.font.italic = italic
-    run.font.color.rgb = color
-    return txBox
+    r = p.add_run()
+    r.text = text
+    r.font.size = Pt(size)
+    r.font.bold = bold
+    r.font.italic = italic
+    r.font.color.rgb = color
+    return tb
+
+
+def bullets(slide, items, left, top, width, size=12, color=DARK, spacing=4):
+    tb = slide.shapes.add_textbox(
+        Inches(left), Inches(top), Inches(width), Inches(5))
+    tf = tb.text_frame
+    tf.word_wrap = True
+    for i, item in enumerate(items):
+        p = tf.paragraphs[0] if i == 0 else tf.add_paragraph()
+        p.space_before = Pt(spacing)
+        r = p.add_run()
+        r.text = item
+        r.font.size = Pt(size)
+        r.font.color.rgb = color
 
 
 def gradient_bg(slide):
-    """Fond dégradé simulé avec deux rectangles."""
-    add_rect(slide, 0, 0, 13.33, 7.5, ACCENT)
-    shape = slide.shapes.add_shape(1, Inches(0), Inches(0), Inches(13.33), Inches(7.5))
-    shape.fill.gradient()
-    shape.fill.gradient_angle = 90
-    stops = shape.fill.gradient_stops
+    s = slide.shapes.add_shape(1, Inches(0), Inches(0),
+                                Inches(13.33), Inches(7.5))
+    s.fill.gradient()
+    s.fill.gradient_angle = 135
+    stops = s.fill.gradient_stops
     stops[0].position = 0
     stops[0].color.rgb = RGBColor(0xFF, 0xB8, 0x8C)
     stops[1].position = 1
     stops[1].color.rgb = RGBColor(0xDE, 0x62, 0x62)
-    shape.line.fill.background()
+    s.line.fill.background()
 
 
-def white_card(slide, left, top, width, height):
-    shape = slide.shapes.add_shape(1, Inches(left), Inches(top), Inches(width), Inches(height))
-    shape.fill.solid()
-    shape.fill.fore_color.rgb = WHITE
-    shape.line.color.rgb = RGBColor(0xE0, 0xE0, 0xE0)
-    shape.line.width = Pt(0.5)
-    # Arrondi simulé avec ombre légère
-    shadow = shape.shadow
-    shadow.inherit = False
-    return shape
+def card(slide, left, top, width, height):
+    s = rect(slide, left, top, width, height, WHITE,
+             RGBColor(0xE0, 0xE0, 0xE0), 0.5)
+    return s
 
 
-def bullet_list(slide, items, left, top, width, font_size=13, color=DARK):
-    txBox = slide.shapes.add_textbox(Inches(left), Inches(top), Inches(width), Inches(5))
-    tf = txBox.text_frame
-    tf.word_wrap = True
-    for i, item in enumerate(items):
-        if i == 0:
-            p = tf.paragraphs[0]
-        else:
-            p = tf.add_paragraph()
-        p.space_before = Pt(4)
-        run = p.add_run()
-        run.text = item
-        run.font.size = Pt(font_size)
-        run.font.color.rgb = color
+def slide_header(slide, title, subtitle=None):
+    txt(slide, title, 0.6, 0.25, 12, 0.75,
+        size=26, bold=True, color=DARK)
+    rect(slide, 0.6, 0.98, 1.8, 0.055, ORANGE)
+    if subtitle:
+        txt(slide, subtitle, 0.6, 1.08, 12, 0.45,
+            size=12, color=GRAY, italic=True)
 
 
-# ── SLIDE 1 — Page de garde ───────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 1 — Page de garde
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
 
-# Titre principal
-add_text(slide, "DataShare", 1, 1.5, 11, 1.5, font_size=60, bold=True, color=DARK, align=PP_ALIGN.CENTER)
-add_rect(slide, 4.5, 3.1, 4.33, 0.06, ORANGE)
-add_text(slide, "Plateforme de transfert sécurisé de fichiers", 1, 3.3, 11, 0.8,
-         font_size=20, color=DARK, align=PP_ALIGN.CENTER)
-add_text(slide, "MVP — Démonstration investisseurs | Avril 2026", 1, 4.2, 11, 0.6,
-         font_size=14, color=DARK, align=PP_ALIGN.CENTER, italic=True)
-add_text(slide, "Copyright DataShare© 2025", 0.5, 7.0, 12, 0.4,
-         font_size=10, color=WHITE, align=PP_ALIGN.CENTER)
+txt(slide, "DataShare", 1, 1.2, 11, 1.6,
+    size=72, bold=True, color=DARK, align=PP_ALIGN.CENTER)
+rect(slide, 4.2, 2.95, 4.9, 0.07, WHITE)
+txt(slide, "Plateforme de transfert sécurisé de fichiers",
+    1, 3.1, 11, 0.8, size=20, color=DARK, align=PP_ALIGN.CENTER)
+txt(slide, "MVP · Référent technique senior · Avril 2026",
+    1, 4.0, 11, 0.6, size=14, color=DARK, align=PP_ALIGN.CENTER, italic=True)
+
+for i, (label, val) in enumerate([
+    ("Tests", "38 ✓"), ("Couverture", "99 %"), ("Vulnérabilités", "0")
+]):
+    x = 2.5 + i * 3.0
+    rect(slide, x, 5.0, 2.5, 1.1, RGBColor(0x00, 0x00, 0x00))
+    s = slide.shapes.add_shape(1, Inches(x), Inches(5.0),
+                                Inches(2.5), Inches(1.1))
+    s.fill.solid(); s.fill.fore_color.rgb = RGBColor(0x00, 0x00, 0x00)
+    s.fill.transparency = 0.25; s.line.fill.background()
+    txt(slide, val,   x+0.1, 5.05, 2.3, 0.6, size=22, bold=True,
+        color=WHITE, align=PP_ALIGN.CENTER)
+    txt(slide, label, x+0.1, 5.65, 2.3, 0.4, size=10,
+        color=ACCENT, align=PP_ALIGN.CENTER)
+
+txt(slide, "© DataShare 2026", 0.5, 7.1, 12, 0.35,
+    size=9, color=WHITE, align=PP_ALIGN.CENTER)
 
 
-# ── SLIDE 2 — Contexte & besoin ───────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 2 — Contexte & besoin
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Contexte & besoin",
+             "Pourquoi DataShare ? Quel problème résout-on ?")
 
-add_text(slide, "Le problème métier", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 1.5, 0.05, ORANGE)
+txt(slide, "Le problème", 0.7, 1.35, 6, 0.45, size=14, bold=True, color=ORANGE)
+bullets(slide, [
+    "Envoyer un fichier lourd par email → pièce jointe refusée (limite 25 Mo)",
+    "WeTransfer / Dropbox → compte obligatoire, lenteur, publicité",
+    "FTP / serveur partagé → configuration complexe, pas accessible à tous",
+    "Google Drive → dépendance Google, interface lourde pour un simple envoi",
+], 0.7, 1.82, 5.8, size=12, color=DARK)
 
-add_text(slide, "DataShare permet aux freelances et petites entreprises d'envoyer "
-         "des fichiers simplement, sans compte email ni FTP, avec un lien sécurisé "
-         "à durée limitée.",
-         0.8, 1.55, 11.5, 1, font_size=14, color=GRAY)
+txt(slide, "La solution DataShare", 7.0, 1.35, 5.8, 0.45, size=14, bold=True, color=ORANGE)
+bullets(slide, [
+    "Dépôt en 3 clics, lien prêt en secondes",
+    "Lien unique non prédictible (UUID v4)",
+    "Expiration automatique (jusqu'à 7 jours)",
+    "Protection optionnelle par mot de passe",
+    "Historique personnel pour les comptes",
+    "Installation autonome en 1 commande Docker",
+], 7.0, 1.82, 5.8, size=12, color=DARK)
 
-# 3 colonnes besoin
-cols = [
-    ("📤", "Envoyer", "Un fichier sans\ninfrastructure complexe"),
-    ("🔗", "Partager", "Un lien unique avec\nexpiration automatique"),
-    ("🔒", "Contrôler", "Accès par mot de passe\net historique personnel"),
+rect(slide, 0.6, 4.15, 12.1, 0.05, RGBColor(0xE8, 0xE8, 0xE8))
+txt(slide, "Périmètre MVP — User Stories implémentées",
+    0.6, 4.25, 12, 0.4, size=13, bold=True, color=DARK)
+
+us_items = [
+    ("US01", "Upload avec compte", GREEN),
+    ("US02", "Téléchargement via lien", GREEN),
+    ("US03", "Création de compte", GREEN),
+    ("US04", "Connexion utilisateur", GREEN),
+    ("US05", "Historique des fichiers", GREEN),
+    ("US06", "Suppression fichier", GREEN),
+    ("US09", "Mot de passe fichier", GREEN),
+    ("US10", "Expiration auto", GREEN),
 ]
-for i, (icon, titre, desc) in enumerate(cols):
-    x = 0.8 + i * 4.0
-    add_rect(slide, x, 2.7, 3.5, 2.5, RGBColor(0xFF, 0xF3, 0xEB))
-    add_text(slide, icon, x + 1.2, 2.85, 1, 0.6, font_size=28, align=PP_ALIGN.CENTER)
-    add_text(slide, titre, x + 0.1, 3.5, 3.3, 0.5, font_size=16, bold=True,
-             color=ORANGE, align=PP_ALIGN.CENTER)
-    add_text(slide, desc, x + 0.1, 4.0, 3.3, 0.8, font_size=12, color=GRAY,
-             align=PP_ALIGN.CENTER)
-
-add_text(slide, "Périmètre MVP (4 semaines) :", 0.8, 5.4, 11, 0.4, font_size=13, bold=True, color=DARK)
-bullet_list(slide,
-    ["✅  Création de compte et connexion sécurisée (JWT)",
-     "✅  Upload de fichiers jusqu'à 50 Mo avec progression",
-     "✅  Lien de partage unique avec expiration configurable (24h / 3j / 1 semaine)",
-     "✅  Protection optionnelle par mot de passe  •  Historique et suppression"],
-    0.8, 5.8, 11.5, font_size=12, color=DARK)
+for i, (code, label, color) in enumerate(us_items):
+    col = i % 4
+    row = i // 4
+    x = 0.6 + col * 3.05
+    y = 4.75 + row * 0.85
+    rect(slide, x, y, 2.8, 0.65, GREEN_L, GREEN, 0.8)
+    txt(slide, f"✅ {code}", x+0.12, y+0.05, 1.0, 0.3,
+        size=10, bold=True, color=GREEN_DARK)
+    txt(slide, label, x+0.12, y+0.33, 2.55, 0.28, size=10, color=DARK)
 
 
-# ── SLIDE 3 — Choix technologiques ───────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 3 — Pourquoi Python / Django ?
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Pourquoi Python / Django ?",
+             "Choix argumenté face aux stacks de référence du cahier des charges")
 
-add_text(slide, "Choix technologiques", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 2, 0.05, ORANGE)
+# Intro
+txt(slide,
+    "Le cahier des charges liste Spring Boot, .NET Core, NestJS et PHP à titre d'exemples. "
+    "Python / Django a été retenu car il satisfait tous les critères techniques — et va au-delà.",
+    0.7, 1.25, 12, 0.55, size=11, color=GRAY, italic=True)
 
-rows = [
-    ("Back-end", "Django 5.2 + DRF", "Batteries incluses, ORM robuste, productivité maximale pour un MVP"),
-    ("Authentification", "JWT (simplejwt)", "Stateless, compatible SPA, standard API REST"),
-    ("Front-end", "Vue.js 3 + Vite", "Composition API puissante, Pinia natif, écosystème cohérent"),
-    ("Base de données", "PostgreSQL 16", "UUID natif, standard professionnel, robustesse"),
-    ("Stockage", "Disque local", "Suffisant pour le prototype — migration S3 prévue en prod"),
-    ("Infrastructure", "Docker Compose", "Reproductibilité totale, installation en 1 commande"),
+# Comparaison Django vs NestJS (le plus proche)
+headers_cmp = ["Critère", "NestJS (TypeScript)", "Django (Python) ✓"]
+col_w_cmp   = [3.5, 3.8, 4.3]
+col_x_cmp   = [0.6, 4.1, 7.9]
+
+for j, (h, w, x) in enumerate(zip(headers_cmp, col_w_cmp, col_x_cmp)):
+    bg = ORANGE if j > 0 else RGBColor(0x37, 0x41, 0x51)
+    rect(slide, x, 1.9, w - 0.05, 0.42, bg)
+    txt(slide, h, x+0.12, 1.95, w-0.2, 0.32,
+        size=11, bold=True, color=WHITE)
+
+rows_cmp = [
+    ("Architecture REST",        "✓ NestJS Controllers",         "✓ DRF ViewSets — plus mature (2011)"),
+    ("Authentification JWT",     "✓ @nestjs/jwt",                "✓ simplejwt — 10M+ installs/mois"),
+    ("ORM & migrations",         "TypeORM (config lourde)",      "✓ Django ORM intégré — zéro config"),
+    ("Tests intégrés",           "Jest (setup manuel)",          "✓ pytest-django — fixtures natives"),
+    ("Sécurité by default",      "À configurer manuellement",    "✓ CSRF, XSS, SQLi protégés nativement"),
+    ("Utilisé en production par","ADP, Adidas",                  "✓ Instagram, Pinterest, Mozilla, NASA"),
+    ("Maturité",                 "2017 — 7 ans",                 "✓ 2005 — 20 ans de battle-testing"),
 ]
 
-headers = ["Composant", "Technologie", "Justification"]
-col_w = [2.5, 2.5, 6.8]
-col_x = [0.7, 3.2, 5.7]
-
-# En-têtes
-for j, (h, w, x) in enumerate(zip(headers, col_w, col_x)):
-    add_rect(slide, x, 1.55, w - 0.05, 0.45, ORANGE)
-    add_text(slide, h, x + 0.1, 1.6, w - 0.15, 0.35,
-             font_size=12, bold=True, color=WHITE)
-
-for i, (comp, tech, just) in enumerate(rows):
-    y = 2.05 + i * 0.62
+for i, (crit, nest, django) in enumerate(rows_cmp):
+    y = 2.37 + i * 0.56
     bg = LIGHT_GRAY if i % 2 == 0 else WHITE
-    for w, x in zip(col_w, col_x):
-        add_rect(slide, x, y, w - 0.05, 0.55, bg)
-    add_text(slide, comp, col_x[0] + 0.1, y + 0.05, col_w[0] - 0.15, 0.5, font_size=11, bold=True, color=DARK)
-    add_text(slide, tech, col_x[1] + 0.1, y + 0.05, col_w[1] - 0.15, 0.5, font_size=11, color=ORANGE, bold=True)
-    add_text(slide, just, col_x[2] + 0.1, y + 0.05, col_w[2] - 0.15, 0.5, font_size=10, color=GRAY)
+    for w, x in zip(col_w_cmp, col_x_cmp):
+        rect(slide, x, y, w-0.05, 0.52, bg)
+    txt(slide, crit,   col_x_cmp[0]+0.12, y+0.08, col_w_cmp[0]-0.2, 0.36, size=10, bold=True, color=DARK)
+    txt(slide, nest,   col_x_cmp[1]+0.12, y+0.08, col_w_cmp[1]-0.2, 0.36, size=10, color=GRAY)
+    txt(slide, django, col_x_cmp[2]+0.12, y+0.08, col_w_cmp[2]-0.2, 0.36, size=10, color=GREEN_DARK, bold=True)
+
+txt(slide,
+    "Conclusion : Django répond à 100 % des exigences techniques du cahier des charges "
+    "avec une productivité supérieure pour un MVP sous contrainte de temps.",
+    0.6, 7.0, 12.1, 0.4, size=10, bold=True, color=ORANGE, italic=True)
 
 
-# ── SLIDE 4 — Architecture ────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 4 — Choix technologiques (tableau complet)
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Choix technologiques justifiés")
 
-add_text(slide, "Architecture de la solution", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 2.5, 0.05, ORANGE)
+headers_t = ["Composant", "Technologie", "Alternative écartée", "Justification clé"]
+col_w_t   = [2.0, 2.2, 2.2, 5.7]
+col_x_t   = [0.55, 2.55, 4.75, 6.95]
 
-# Boîtes architecture
-boxes = [
-    (0.7, 1.6, 3.6, 1.4, "🌐  Navigateur", "Vue.js 3 + Pinia\nVue Router — 5 pages\nAxios (client API)", ACCENT),
-    (4.9, 1.6, 3.5, 1.4, "⚙️  API REST", "Django 5.2 + DRF\n/auth/  /files/\nJWT + validation", RGBColor(0xFF, 0xD9, 0xBC)),
-    (8.9, 1.6, 3.5, 1.4, "🗄️  Stockage", "PostgreSQL 16\n+ Disque local\n/media/uploads/", RGBColor(0xFF, 0xD9, 0xBC)),
+for j, (h, w, x) in enumerate(zip(headers_t, col_w_t, col_x_t)):
+    rect(slide, x, 1.2, w-0.05, 0.42, ORANGE)
+    txt(slide, h, x+0.1, 1.25, w-0.15, 0.32, size=11, bold=True, color=WHITE)
+
+rows_t = [
+    ("Back-end",        "Python 3.12\n+ Django 5.2",  "NestJS, Spring",   "Batteries incluses, ORM natif, 20 ans de maturité, productivité ×3 sur un MVP"),
+    ("API REST",        "Django REST\nFramework",      "FastAPI",          "Le plus utilisé avec Django (10M+ téléch/mois), sérialiseurs + permissions intégrés"),
+    ("Authentification","JWT simplejwt", "Sessions, OAuth2", "Stateless, compatible SPA, rotation automatique du refresh token"),
+    ("Front-end",       "Vue.js 3 + Vite","React, Angular",  "Composition API puissante, Pinia natif, bundle 139 Ko, courbe d'apprentissage douce"),
+    ("Base de données", "PostgreSQL 16", "MySQL, SQLite",    "UUID natif, JSONB, transactions ACID, standard professionnel, Docker officiel"),
+    ("Stockage fichiers","Disque local", "AWS S3",           "Suffisant pour le MVP, migration S3 documentée et prévue pour la production"),
+    ("Infrastructure",  "Docker Compose","Déploiement manuel","Reproductibilité totale, installation en 1 commande, isolation des services"),
+    ("Tests back",      "pytest + pytest-django","unittest", "Syntaxe concise, fixtures puissantes, plugins Django, couverture HTML intégrée"),
 ]
-for x, y, w, h, titre, desc, col in boxes:
-    add_rect(slide, x, y, w, h, col)
-    add_text(slide, titre, x + 0.15, y + 0.1, w - 0.3, 0.45, font_size=13, bold=True, color=DARK)
-    add_text(slide, desc, x + 0.15, y + 0.55, w - 0.3, 0.75, font_size=11, color=DARK)
 
-# Flèches texte
-add_text(slide, "HTTP/JSON\nJWT →", 4.3, 2.0, 0.7, 0.8, font_size=9, color=GRAY, align=PP_ALIGN.CENTER)
-add_text(slide, "ORM\nSQL →", 8.3, 2.0, 0.7, 0.8, font_size=9, color=GRAY, align=PP_ALIGN.CENTER)
+for i, (comp, tech, alt, just) in enumerate(rows_t):
+    y = 1.67 + i * 0.615
+    bg = LIGHT_GRAY if i % 2 == 0 else WHITE
+    for w, x in zip(col_w_t, col_x_t):
+        rect(slide, x, y, w-0.05, 0.59, bg)
+    txt(slide, comp, col_x_t[0]+0.1, y+0.06, col_w_t[0]-0.15, 0.48, size=10, bold=True, color=DARK)
+    txt(slide, tech, col_x_t[1]+0.1, y+0.06, col_w_t[1]-0.15, 0.48, size=10, bold=True, color=ORANGE)
+    txt(slide, alt,  col_x_t[2]+0.1, y+0.06, col_w_t[2]-0.15, 0.48, size=10, color=GRAY, italic=True)
+    txt(slide, just, col_x_t[3]+0.1, y+0.06, col_w_t[3]-0.15, 0.48, size=10, color=DARK)
 
-# Flux principaux
-add_text(slide, "Flux principaux", 0.8, 3.25, 12, 0.45, font_size=14, bold=True, color=DARK)
-add_rect(slide, 0.8, 3.68, 11.5, 0.04, RGBColor(0xE0, 0xE0, 0xE0))
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 5 — Architecture
+# ═══════════════════════════════════════════════════════════════════════════════
+slide = prs.slides.add_slide(BLANK)
+gradient_bg(slide)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Architecture de la solution",
+             "Client-serveur découplé · Docker Compose · 3 services")
+
+boxes = [
+    (0.55, 1.45, 3.5, 2.1, "Navigateur",
+     "Vue.js 3 SPA\nVue Router — 5 pages\nPinia (state)\nAxios (HTTP client)", BLUE_L, BLUE),
+    (4.85, 1.45, 3.7, 2.1, "API REST",
+     "Django 5.2 + DRF\n/api/auth/  /api/files/\nJWT · CORS · PBKDF2\nLogging structuré", CARD_BG, ORANGE),
+    (9.25, 1.45, 3.6, 2.1, "Stockage",
+     "PostgreSQL 16\nTables : users + files\nDisque local /media/\nVolumes Docker", GREEN_L, GREEN),
+]
+for x, y, w, h, titre, desc, bg, border in boxes:
+    rect(slide, x, y, w, h, bg, border, 1.5)
+    txt(slide, titre, x+0.15, y+0.08, w-0.3, 0.38,
+        size=13, bold=True, color=DARK)
+    txt(slide, desc,  x+0.15, y+0.5,  w-0.3, 1.5,
+        size=10, color=DARK)
+
+# Flèches
+txt(slide, "HTTP/JSON\nJWT Bearer →", 4.0, 2.0, 0.9, 0.8, size=9, color=GRAY, align=PP_ALIGN.CENTER)
+txt(slide, "ORM Django\nSQL →",        8.6, 2.0, 0.7, 0.8, size=9, color=GRAY, align=PP_ALIGN.CENTER)
+
+# Bande Docker
+rect(slide, 0.55, 3.7, 12.3, 0.06, RGBColor(0xE0, 0xE0, 0xE0))
+txt(slide, "Docker Compose — réseau interne · volumes persistants postgres_data & media_data",
+    0.55, 3.82, 12.3, 0.38, size=10, color=GRAY, italic=True, align=PP_ALIGN.CENTER)
+
+# Flux
+txt(slide, "Flux principaux", 0.6, 4.3, 12, 0.4, size=13, bold=True, color=DARK)
 flux = [
-    ("🔐  Authentification", "Login → JWT access (1h) + refresh (7j) → stocké localStorage → injecté dans chaque requête"),
-    ("📤  Upload", "Sélection fichier → validation taille (50 Mo) → envoi multipart → stockage disque → UUID token généré"),
-    ("🔗  Partage", "Lien /download/<uuid> → infos publiques → saisie MDP si protégé → téléchargement natif"),
+    ("Authentification",
+     "POST /api/auth/login/ → access token 1h + refresh 7j → localStorage → injecté dans chaque requête via intercepteur Axios"),
+    ("Upload",
+     "Sélection fichier (max 1 Go) → validation client + serveur → multipart POST → stockage disque → UUID token → share_url retourné"),
+    ("Partage / Téléchargement",
+     "Lien /download/<uuid> → GET infos publiques → saisie MDP si protégé → GET download → Content-Disposition natif"),
 ]
 for i, (titre, desc) in enumerate(flux):
-    y = 3.85 + i * 0.9
-    add_text(slide, titre, 0.8, y, 3.2, 0.45, font_size=12, bold=True, color=ORANGE)
-    add_text(slide, desc, 4.0, y, 8.5, 0.45, font_size=11, color=GRAY)
+    y = 4.75 + i * 0.75
+    rect(slide, 0.6, y, 2.5, 0.55, CARD_BG, ORANGE, 0.8)
+    txt(slide, titre, 0.7, y+0.08, 2.3, 0.38, size=10, bold=True, color=ORANGE)
+    txt(slide, desc,  3.2, y+0.08, 9.7, 0.48, size=10, color=DARK)
 
 
-# ── SLIDE 5 — Modèle de données ───────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 6 — Modèle de données
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Modèle de données",
+             "2 tables · relation 1-N · sécurité by design")
 
-add_text(slide, "Modèle de données", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 2, 0.05, ORANGE)
+# USER
+rect(slide, 0.6, 1.35, 4.6, 0.45, BLUE)
+txt(slide, "USER  (Django built-in)",
+    0.7, 1.4, 4.4, 0.35, size=12, bold=True, color=WHITE)
 
-# Table User
-add_rect(slide, 0.8, 1.6, 4.5, 0.45, ORANGE)
-add_text(slide, "USER  (Django built-in)", 0.9, 1.65, 4.3, 0.35, font_size=13, bold=True, color=WHITE)
-user_fields = [("id", "INTEGER PK"), ("username", "VARCHAR(150)"),
-               ("email", "VARCHAR(254)"), ("password", "VARCHAR(128) — PBKDF2")]
-for i, (f, t) in enumerate(user_fields):
-    bg = LIGHT_GRAY if i % 2 == 0 else WHITE
-    add_rect(slide, 0.8, 2.05 + i * 0.42, 4.5, 0.4, bg)
-    add_text(slide, f, 0.95, 2.1 + i * 0.42, 1.8, 0.35, font_size=11, bold=True, color=DARK)
-    add_text(slide, t, 2.75, 2.1 + i * 0.42, 2.4, 0.35, font_size=11, color=GRAY)
-
-# Flèche relation
-add_text(slide, "1 ──── N", 5.4, 2.8, 1.3, 0.5, font_size=12, bold=True, color=ORANGE, align=PP_ALIGN.CENTER)
-
-# Table SharedFile
-add_rect(slide, 6.8, 1.6, 5.8, 0.45, ORANGE)
-add_text(slide, "SHAREDFILE", 6.9, 1.65, 5.6, 0.35, font_size=13, bold=True, color=WHITE)
-sf_fields = [
-    ("id", "UUID PK — non devinable"),
-    ("owner_id", "FK → User (CASCADE)"),
-    ("original_name", "VARCHAR(255)"),
-    ("file", "FileField — chemin disque"),
-    ("size", "BIGINT — en octets"),
-    ("share_token", "UUID UNIQUE — lien partage"),
-    ("expires_at", "DATETIME — expiration"),
-    ("password_hash", "VARCHAR — PBKDF2 ou vide"),
-    ("created_at", "DATETIME — auto"),
+user_f = [
+    ("id",          "INTEGER PK"),
+    ("username",    "VARCHAR(150)"),
+    ("email",       "VARCHAR(254) — unique"),
+    ("password",    "VARCHAR(128) — PBKDF2+SHA256"),
+    ("date_joined", "DATETIME — auto"),
+    ("is_active",   "BOOLEAN"),
 ]
-for i, (f, t) in enumerate(sf_fields):
+for i, (f, t) in enumerate(user_f):
     bg = LIGHT_GRAY if i % 2 == 0 else WHITE
-    add_rect(slide, 6.8, 2.05 + i * 0.42, 5.8, 0.4, bg)
-    add_text(slide, f, 6.95, 2.1 + i * 0.42, 2.2, 0.35, font_size=10, bold=True, color=DARK)
-    add_text(slide, t, 9.15, 2.1 + i * 0.42, 3.2, 0.35, font_size=10, color=GRAY)
+    rect(slide, 0.6, 1.82+i*0.46, 4.6, 0.44, bg)
+    txt(slide, f, 0.75, 1.88+i*0.46, 1.8, 0.32, size=10, bold=True, color=DARK)
+    txt(slide, t, 2.55, 1.88+i*0.46, 2.5, 0.32, size=10, color=GRAY)
 
+txt(slide, "1 ──── N", 5.35, 3.2, 1.4, 0.55,
+    size=13, bold=True, color=ORANGE, align=PP_ALIGN.CENTER)
 
-# ── SLIDE 6 — Démonstration ───────────────────────────────────────────────────
-slide = prs.slides.add_slide(BLANK)
-gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+# SHAREDFILE
+rect(slide, 6.85, 1.35, 6.0, 0.45, ORANGE)
+txt(slide, "SHAREDFILE",
+    6.95, 1.4, 5.8, 0.35, size=12, bold=True, color=WHITE)
 
-add_text(slide, "Démonstration — Parcours utilisateur", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 3.5, 0.05, ORANGE)
-
-steps = [
-    ("1", "Page d'accueil", "Fond dégradé corail · tagline · icône d'upload cliquable"),
-    ("2", "Inscription / Connexion", "Formulaire centré · validation côté client et serveur · JWT stocké"),
-    ("3", "Dashboard — Mon espace", "Sidebar gradient · liste des fichiers · filtres Tous / Actifs / Expiré"),
-    ("4", "Upload d'un fichier", "Glisser-déposer · mot de passe optionnel · choix d'expiration · progression"),
-    ("5", "Lien de partage", "Affiché après upload · copie en 1 clic · format /download/<uuid>"),
-    ("6", "Page de téléchargement", "Badge expiration · saisie MDP si protégé · erreur claire si expiré"),
+sf_f = [
+    ("id",            "UUID PK",          "Identifiant interne non exposé"),
+    ("owner_id",      "FK → User",        "Isolation stricte par propriétaire"),
+    ("original_name", "VARCHAR(255)",     "Nom conservé pour téléchargement"),
+    ("file",          "FileField",        "uploads/<uid>/<uuid>_<name>"),
+    ("size",          "BIGINT",           "En octets, affiché côté client"),
+    ("content_type",  "VARCHAR(100)",     "MIME type → header Content-Type"),
+    ("share_token",   "UUID UNIQUE",      "128 bits — non devinable par brute force"),
+    ("expires_at",    "DATETIME",         "Défaut : J+7, max 7 jours"),
+    ("password_hash", "VARCHAR(255)",     "PBKDF2 ou vide si pas de protection"),
+    ("created_at",    "DATETIME auto",    "Timestamp upload"),
 ]
-for i, (num, titre, desc) in enumerate(steps):
-    y = 1.55 + i * 0.82
-    add_rect(slide, 0.7, y, 0.55, 0.55, ORANGE)
-    add_text(slide, num, 0.7, y + 0.05, 0.55, 0.45, font_size=18, bold=True,
-             color=WHITE, align=PP_ALIGN.CENTER)
-    add_text(slide, titre, 1.4, y + 0.02, 3.5, 0.35, font_size=13, bold=True, color=DARK)
-    add_text(slide, desc, 1.4, y + 0.35, 10.8, 0.35, font_size=11, color=GRAY)
+for i, (f, t, role) in enumerate(sf_f):
+    bg = LIGHT_GRAY if i % 2 == 0 else WHITE
+    rect(slide, 6.85, 1.82+i*0.46, 6.0, 0.44, bg)
+    txt(slide, f,    6.98, 1.88+i*0.46, 2.0, 0.32, size=10, bold=True, color=DARK)
+    txt(slide, t,    8.98, 1.88+i*0.46, 1.5, 0.32, size=10, color=ORANGE)
+    txt(slide, role, 10.5, 1.88+i*0.46, 2.2, 0.32, size=9,  color=GRAY, italic=True)
 
 
-# ── SLIDE 7 — Qualité & Tests ─────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 7 — Sécurité
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Sécurité — défense en profondeur",
+             "Chaque couche est protégée indépendamment")
 
-add_text(slide, "Qualité & Tests", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 1.8, 0.05, ORANGE)
+sec_cols = [
+    ("Authentification JWT", [
+        "Access token : 1h · HS256",
+        "Refresh token : 7j · rotation",
+        "Header Authorization: Bearer",
+        "Aucun token en cookie → simplifié",
+        "Prod : migration httpOnly cookie prévue",
+    ]),
+    ("Données & mots de passe", [
+        "MDP utilisateur : PBKDF2-SHA256",
+        "MDP fichier : PBKDF2-SHA256",
+        "Jamais stocké en clair — jamais loggé",
+        "8 validateurs Django activés",
+        "Rejet MDP trop courts ou courants",
+    ]),
+    ("Accès & isolation", [
+        "owner=request.user sur TOUTES les vues",
+        "UUID v4 pour share_token (128 bits)",
+        "410 Gone sur lien expiré",
+        "403 sur mauvais MDP fichier",
+        "CORS : origines explicites, pas de *",
+    ]),
+    ("Infrastructure", [
+        "Limite upload : 1 Go côté serveur",
+        "X-Content-Type-Options activé",
+        "X-Frame-Options activé",
+        "pip-audit : 0 vulnérabilité applicative",
+        "Dépendances : 9 alertes système hôte seulement",
+    ]),
+]
 
-# Métriques clés
-metrics = [("38", "tests\nunitaires\n+ intégration"), ("10", "tests E2E\nPlaywright"), ("100%", "couverture\nde code"), ("0", "vulnérabilité\napplicative")]
-for i, (val, label) in enumerate(metrics):
-    x = 0.7 + i * 3.0
-    add_rect(slide, x, 1.55, 2.8, 1.4, RGBColor(0xFF, 0xF3, 0xEB))
-    add_text(slide, val, x + 0.1, 1.65, 2.6, 0.7, font_size=34, bold=True,
-             color=ORANGE, align=PP_ALIGN.CENTER)
-    add_text(slide, label, x + 0.1, 2.35, 2.6, 0.55, font_size=10, color=GRAY,
-             align=PP_ALIGN.CENTER)
+for i, (titre, items) in enumerate(sec_cols):
+    col = i % 2
+    row = i // 2
+    x = 0.6 + col * 6.2
+    y = 1.35 + row * 2.85
+    rect(slide, x, y, 5.9, 2.65, LIGHT_GRAY, RGBColor(0xE0, 0xE0, 0xE0), 0.8)
+    rect(slide, x, y, 5.9, 0.42, ORANGE)
+    txt(slide, titre, x+0.15, y+0.06, 5.6, 0.3, size=12, bold=True, color=WHITE)
+    bullets(slide, ["• " + it for it in items],
+            x+0.2, y+0.52, 5.5, size=11, color=DARK, spacing=3)
 
-# 2 colonnes : unitaires/intégration | E2E
-add_text(slide, "Tests unitaires & intégration (pytest)", 0.8, 3.1, 5.8, 0.4, font_size=12, bold=True, color=ORANGE)
-bullet_list(slide, [
-    "Inscription, connexion, profil, isolation utilisateur",
-    "Upload (taille, MDP, expiration custom, sans fichier)",
-    "Suppression (propre fichier / fichier d'autrui → 404)",
-    "Téléchargement (valide, expiré 410, MDP 403, 404)",
-    "Modèle : is_expired, is_password_protected, hachage",
-], 0.8, 3.52, 5.8, font_size=11)
+txt(slide,
+    "Prochain niveau prod : HTTPS + HSTS · httpOnly cookies · Rate limiting sur /auth/ · Stockage S3 avec URLs signées",
+    0.6, 7.08, 12.1, 0.38, size=10, color=GRAY, italic=True)
 
-add_text(slide, "Tests E2E — Playwright (navigateur réel)", 6.8, 3.1, 5.8, 0.4, font_size=12, bold=True, color=ORANGE)
-bullet_list(slide, [
-    "Page d'accueil — tagline et icône visibles",
-    "Inscription → redirection dashboard",
-    "Connexion correcte / mauvais MDP → erreur",
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 8 — Conformité aux specs
+# ═══════════════════════════════════════════════════════════════════════════════
+slide = prs.slides.add_slide(BLANK)
+gradient_bg(slide)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Conformité au cahier des charges",
+             "Toutes les exigences MVP + bonus vérifiés")
+
+conformite = [
+    # (exigence, statut, détail)
+    ("US01 Upload avec compte",         True,  "Fichier jusqu'à 1 Go · MDP optionnel · expiration 1-7j"),
+    ("US02 Téléchargement via lien",    True,  "UUID v4 · métadonnées publiques · 410 si expiré"),
+    ("US03 Création de compte",         True,  "Email unique · PBKDF2 · 8 validateurs"),
+    ("US04 Connexion JWT",              True,  "Access 1h + refresh 7j · rotation activée"),
+    ("US05 Historique fichiers",        True,  "Nom, taille, date, état · isolation utilisateur"),
+    ("US06 Suppression fichier",        True,  "Physique + BDD · confirmation front · 404 si fichier d'autrui"),
+    ("US09 Mot de passe fichier",       True,  "PBKDF2 · min 6 car. · jamais en clair"),
+    ("US10 Expiration automatique",     True,  "Défaut 7j · configurable 1-7j · 410 à expiration"),
+    ("Architecture REST API",           True,  "DRF · OpenAPI 3.0 · JSON"),
+    ("Authentification JWT",            True,  "simplejwt · stateless · compatible SPA"),
+    ("Tests unitaires (objectif 70%)",  True,  "38 tests · 99% de couverture backend"),
+    ("Tests E2E (2-3 scénarios min.)",  True,  "10 tests Playwright sur navigateur Chromium réel"),
+    ("TESTING / SECURITY / PERF / MAINTENANCE", True, "4 fichiers présents et documentés"),
+    ("Installation Docker",             True,  "docker compose up -d · migrations auto"),
+    ("Conventional commits",            True,  "feat / fix / docs / test / chore"),
+]
+
+for i, (label, ok, detail) in enumerate(conformite):
+    col = i % 2
+    row = i // 2
+    x = 0.55 + col * 6.2
+    y = 1.3 + row * 0.73
+    bg = GREEN_L if ok else RED_L
+    border = GREEN if ok else RED
+    rect(slide, x, y, 6.0, 0.65, bg, border, 0.7)
+    icon = "✅" if ok else "❌"
+    txt(slide, icon,   x+0.1,  y+0.08, 0.5, 0.48, size=12, align=PP_ALIGN.CENTER)
+    txt(slide, label,  x+0.65, y+0.04, 3.5, 0.28, size=10, bold=True, color=DARK)
+    txt(slide, detail, x+0.65, y+0.32, 5.2, 0.28, size=9,  color=GRAY, italic=True)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 9 — Qualité & Tests
+# ═══════════════════════════════════════════════════════════════════════════════
+slide = prs.slides.add_slide(BLANK)
+gradient_bg(slide)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Qualité & Tests",
+             "Pyramide de tests · objectif 70% → atteint 99%")
+
+# Métriques
+metrics = [
+    ("38", "tests unitaires\n& intégration", ORANGE),
+    ("10", "tests E2E\nPlaywright", BLUE),
+    ("99 %", "couverture\nbackend", GREEN),
+    ("0", "vulnérabilité\napplicative", GREEN),
+    ("139 Ko", "bundle JS\nprod gzip 54 Ko", ORANGE),
+]
+for i, (val, label, color) in enumerate(metrics):
+    x = 0.5 + i * 2.45
+    rect(slide, x, 1.35, 2.25, 1.3, CARD_BG, color, 1)
+    txt(slide, val,   x+0.1, 1.45, 2.05, 0.65, size=26, bold=True, color=color, align=PP_ALIGN.CENTER)
+    txt(slide, label, x+0.1, 2.1,  2.05, 0.5,  size=9,  color=GRAY, align=PP_ALIGN.CENTER)
+
+# 2 colonnes tests
+txt(slide, "Tests unitaires & intégration (pytest)", 0.6, 2.85, 5.8, 0.4, size=12, bold=True, color=ORANGE)
+bullets(slide, [
+    "Inscription : succès / MDP faible / doublon / champs invalides",
+    "Connexion : succès / mauvais MDP / utilisateur inconnu",
+    "Upload : succès / trop grand / sans fichier / avec MDP / expiration custom",
+    "Suppression : propre fichier (204) / fichier d'autrui (404)",
+    "Téléchargement : valide / expiré (410) / MDP incorrect (403) / 404",
+    "Modèle SharedFile : is_expired, is_password_protected, hachage, __str__",
+    "Isolation : filtre owner=request.user vérifié sur chaque endpoint protégé",
+], 0.6, 3.28, 5.9, size=10, color=DARK, spacing=3)
+
+txt(slide, "Tests E2E — Playwright (Chromium réel)", 6.8, 2.85, 5.8, 0.4, size=12, bold=True, color=BLUE)
+bullets(slide, [
+    "Page d'accueil — tagline et icône upload visibles",
+    "Inscription → redirection automatique /dashboard",
+    "Connexion valide → dashboard affiché",
+    "Mauvais MDP → message d'erreur visible",
     "Déconnexion → retour /login",
-    "Upload fichier → lien de partage généré",
-    "Lien partage → page téléchargement publique",
-    "Suppression → fichier retiré de la liste",
-], 6.8, 3.52, 5.8, font_size=11)
+    "Accès /dashboard sans token → redirection /login",
+    "Upload fichier → lien /download/<uuid> généré",
+    "Navigation lien → page téléchargement publique",
+    "Fichier dans .file-row après upload",
+    "Suppression → comptage -1 après confirmation",
+], 6.8, 3.28, 5.9, size=10, color=DARK, spacing=3)
 
-add_text(slide, "Scan sécurité pip-audit : 0 vulnérabilité applicative  •  Bundle prod : 139 Ko JS (54 Ko gzip)  •  Build : 1.2s",
-         0.8, 6.85, 11.5, 0.4, font_size=10, color=GRAY, italic=True)
 
-
-# ── SLIDE 8 — Utilisation de l'IA ────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 10 — Performance
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Performance & observabilité",
+             "Métriques réelles mesurées en environnement Docker dev")
 
-add_text(slide, "Utilisation de l'IA dans le développement", 0.8, 0.6, 12, 0.8, font_size=24, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 4, 0.05, ORANGE)
+# Métriques back
+txt(slide, "Back-end — temps de réponse (curl, 10 appels)", 0.6, 1.3, 6.5, 0.4,
+    size=13, bold=True, color=ORANGE)
 
-add_text(slide, "Posture : copilote technique assigné à une User Story précise — pas du vibe coding",
-         0.8, 1.5, 11.5, 0.45, font_size=13, color=GRAY, italic=True)
+perf_back = [
+    ("POST /api/auth/login/",    "227 ms",  "Intentionnel — hachage PBKDF2 anti-brute-force"),
+    ("GET  /api/files/",         " 13 ms",  "Liste paginable, filtre owner côté serveur"),
+    ("POST /api/files/upload/",  " 59 ms",  "Fichier 1 Mo — I/O disque inclus"),
+    ("GET  /api/files/download/","  8 ms",  "Lecture disque + header Content-Disposition"),
+]
+for i, (ep, val, note) in enumerate(perf_back):
+    y = 1.75 + i * 0.57
+    bg = LIGHT_GRAY if i % 2 == 0 else WHITE
+    rect(slide, 0.6, y, 6.0, 0.53, bg)
+    txt(slide, ep,   0.72, y+0.07, 3.2, 0.38, size=10, bold=True, color=DARK)
+    txt(slide, val,  3.9,  y+0.07, 0.9, 0.38, size=11, bold=True, color=ORANGE, align=PP_ALIGN.CENTER)
+    txt(slide, note, 4.8,  y+0.07, 1.7, 0.38, size=9,  color=GRAY, italic=True)
 
-# 2 colonnes
-add_text(slide, "Tâches confiées à l'IA", 0.8, 2.05, 5.5, 0.45, font_size=14, bold=True, color=ORANGE)
-bullet_list(slide, [
-    "Modèle SharedFile (hachage MDP, propriétés)",
-    "Sérialiseurs DRF (upload, download, public)",
-    "Vues API (upload, download, info publique)",
-    "Store Pinia files.js + composants Vue.js",
-    "Suite de tests pytest (38 tests)",
-    "Documentation (README, TESTING, SECURITY…)",
-], 0.8, 2.5, 5.5, font_size=11)
+# Front-end
+txt(slide, "Front-end — budget de performance", 7.2, 1.3, 5.8, 0.4,
+    size=13, bold=True, color=ORANGE)
+perf_front = [
+    ("Bundle JS prod",    "139 Ko", "54 Ko gzip — sous le seuil 200 Ko recommandé"),
+    ("Bundle CSS prod",   "  8 Ko", "Tailwind purgé"),
+    ("Build Vite",        "  1.2s", "Cold build production"),
+    ("First Paint",       " ~180ms","Localhost — mesuré DevTools"),
+    ("Largest Content.",  " ~320ms","LCP — seuil Good < 2500ms"),
+]
+for i, (label, val, note) in enumerate(perf_front):
+    y = 1.75 + i * 0.57
+    bg = LIGHT_GRAY if i % 2 == 0 else WHITE
+    rect(slide, 7.2, y, 5.7, 0.53, bg)
+    txt(slide, label, 7.32, y+0.07, 2.4, 0.38, size=10, bold=True, color=DARK)
+    txt(slide, val,   9.72, y+0.07, 0.9, 0.38, size=11, bold=True, color=ORANGE, align=PP_ALIGN.CENTER)
+    txt(slide, note,  10.6, y+0.07, 2.2, 0.38, size=9,  color=GRAY, italic=True)
 
-add_text(slide, "Supervision & corrections apportées", 6.5, 2.05, 6, 0.45, font_size=14, bold=True, color=ORANGE)
-bullet_list(slide, [
-    "✏️  Filtre owner=request.user manquant sur suppression",
-    "✏️  share_url corrigé → frontend Vue plutôt qu'API",
-    "✏️  Refresh token dans intercepteur Axios incomplet",
-    "✏️  Layout desktop login card disparaissait (flexbox)",
-    "✅  Aucune intégration sans tests passants",
+# Observabilité
+rect(slide, 0.6, 4.55, 12.1, 0.05, RGBColor(0xE0, 0xE0, 0xE0))
+txt(slide, "Observabilité — logs structurés Django", 0.6, 4.65, 12, 0.4,
+    size=13, bold=True, color=ORANGE)
+bullets(slide, [
+    "Format : [2026-04-24T14:32:10] INFO files: Fichier rapport.pdf uploadé — 2.5 Mo — user=alice — expires=2026-05-01",
+    "Niveau WARNING sur mot de passe de fichier incorrect · niveau ERROR sur exception inattendue",
+    "Deux loggers : files et accounts — console Docker, redirectibles vers ELK/Datadog en prod",
+], 0.6, 5.1, 12.1, size=10, color=DARK, spacing=4)
+
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 11 — IA dans le développement
+# ═══════════════════════════════════════════════════════════════════════════════
+slide = prs.slides.add_slide(BLANK)
+gradient_bg(slide)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Utilisation de l'IA dans le développement",
+             "Posture : référent technique supervisant un copilote IA — pas du vibe coding")
+
+txt(slide,
+    "L'IA (Claude — Anthropic) a été utilisée comme junior technique assigné à des User Stories précises. "
+    "Chaque bloc de code généré a été relu, testé et ajusté avant intégration.",
+    0.6, 1.3, 12, 0.5, size=11, color=GRAY, italic=True)
+
+txt(slide, "Tâches confiées à l'IA", 0.6, 1.92, 5.8, 0.4, size=13, bold=True, color=ORANGE)
+bullets(slide, [
+    "Modèle SharedFile (password_hash, set_password, check_password)",
+    "Sérialiseurs DRF : upload, download, infos publiques",
+    "Vues API avec gestion des cas d'erreur (410, 403, 413)",
+    "Store Pinia files.js + composants DashboardView, DownloadView",
+    "Suite pytest : 38 tests unitaires et d'intégration",
+    "Diagramme d'architecture matplotlib (PNG haute résolution)",
+    "Documentation : README, TESTING, SECURITY, PERF, MAINTENANCE",
+], 0.6, 2.38, 5.8, size=11, color=DARK, spacing=4)
+
+txt(slide, "Supervision & corrections apportées", 6.8, 1.92, 6.0, 0.4, size=13, bold=True, color=ORANGE)
+bullets(slide, [
+    "✏️  Filtre owner=request.user manquant sur FileDeleteView",
+    "✏️  share_url corrigé → frontend /download/ pas /api/files/",
+    "✏️  Refresh token absent de l'intercepteur Axios",
+    "✏️  Layout desktop login : flex-direction mal appliqué",
+    "✏️  Tests E2E : conflit plugin web3 → venv isolé e2e/",
+    "✅  Zéro intégration sans tests passants",
     "✅  Revue systématique de chaque bloc de code",
-], 6.5, 2.5, 6, font_size=11)
+], 6.8, 2.38, 6.0, size=11, color=DARK, spacing=4)
 
-add_rect(slide, 0.8, 5.5, 11.5, 0.05, RGBColor(0xE0, 0xE0, 0xE0))
-add_text(slide, "Apport mesuré : ×3 sur la vitesse d'implémentation des vues et sérialiseurs  "
-         "—  Limite : supervision indispensable sur la sécurité et les cas limites",
-         0.8, 5.65, 11.5, 0.6, font_size=11, color=GRAY, italic=True)
+rect(slide, 0.6, 5.55, 12.1, 0.06, RGBColor(0xE0, 0xE0, 0xE0))
+# Tableau apports/limites
+headers_ia = ["Aspect", "Observation"]
+col_w_ia = [3.0, 9.0]
+col_x_ia = [0.6, 3.6]
+for j, (h, w, x) in enumerate(zip(headers_ia, col_w_ia, col_x_ia)):
+    rect(slide, x, 5.65, w-0.05, 0.38, ORANGE)
+    txt(slide, h, x+0.1, 5.7, w-0.15, 0.28, size=10, bold=True, color=WHITE)
+rows_ia = [
+    ("Gain de temps", "×3 sur l'implémentation des vues, sérialiseurs et tests — estimé 3 jours économisés"),
+    ("Qualité", "Bonne sur le code standard · supervision obligatoire sur sécurité et cas limites"),
+    ("Limites constatées", "Oublis d'isolation utilisateur · URLs hardcodées · gestion refresh token incomplète"),
+]
+for i, (asp, obs) in enumerate(rows_ia):
+    y = 6.06 + i * 0.42
+    bg = LIGHT_GRAY if i % 2 == 0 else WHITE
+    rect(slide, col_x_ia[0], y, col_w_ia[0]-0.05, 0.4, bg)
+    rect(slide, col_x_ia[1], y, col_w_ia[1]-0.05, 0.4, bg)
+    txt(slide, asp, col_x_ia[0]+0.1, y+0.06, col_w_ia[0]-0.2, 0.28, size=10, bold=True, color=DARK)
+    txt(slide, obs, col_x_ia[1]+0.1, y+0.06, col_w_ia[1]-0.2, 0.28, size=10, color=GRAY)
 
 
-# ── SLIDE 9 — Conclusion ──────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 12 — Ce qui a été livré
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
-white_card(slide, 0.5, 0.4, 12.3, 6.6)
-
-add_text(slide, "Ce qui a été livré", 0.8, 0.6, 12, 0.8, font_size=28, bold=True, color=DARK)
-add_rect(slide, 0.8, 1.35, 2, 0.05, ORANGE)
+card(slide, 0.4, 0.15, 12.5, 7.15)
+slide_header(slide, "Ce qui a été livré",
+             "Application complète, testée, documentée et déployable")
 
 livrables = [
-    ("✅", "Application web fonctionnelle", "Toutes les US MVP implémentées et testées"),
-    ("✅", "Architecture découplée professionnelle", "Vue.js + Django REST API + PostgreSQL + Docker"),
-    ("✅", "Sécurité solide", "JWT, PBKDF2, isolation utilisateur, UUID v4, CORS strict"),
-    ("✅", "38 tests, 100% de couverture", "pytest — tests unitaires et d'intégration"),
-    ("✅", "Documentation complète", "README, OpenAPI, TESTING, SECURITY, PERF, MAINTENANCE"),
-    ("✅", "Installation en 1 commande", "docker compose up -d"),
+    ("Application web fonctionnelle",
+     "Toutes les US MVP + US09 + US10 — 8 User Stories livrées"),
+    ("Architecture découplée professionnelle",
+     "Vue.js 3 SPA + Django REST API + PostgreSQL 16 + Docker Compose"),
+    ("Sécurité solide",
+     "JWT rotation · PBKDF2 · isolation owner · UUID v4 · CORS strict · pip-audit 0 CVE"),
+    ("Couverture de tests 99%",
+     "38 tests pytest unitaires/intégration + 10 tests E2E Playwright"),
+    ("Documentation complète",
+     "README · OpenAPI 3.0 · TESTING · SECURITY · PERF · MAINTENANCE · doc technique PDF"),
+    ("Observabilité",
+     "Logs structurés Django · timestamps · niveaux INFO/WARNING/ERROR"),
+    ("Installation en 1 commande",
+     "docker compose up -d — migrations automatiques au démarrage"),
 ]
-for i, (check, titre, desc) in enumerate(livrables):
-    y = 1.6 + i * 0.75
-    add_rect(slide, 0.75, y, 0.5, 0.5, RGBColor(0xD4, 0xED, 0xDA))
-    add_text(slide, check, 0.75, y + 0.05, 0.5, 0.4, font_size=14, align=PP_ALIGN.CENTER, color=RGBColor(0x15, 0x5A, 0x24))
-    add_text(slide, titre, 1.4, y + 0.02, 4, 0.35, font_size=13, bold=True, color=DARK)
-    add_text(slide, desc, 5.4, y + 0.02, 7.2, 0.35, font_size=12, color=GRAY)
 
-add_text(slide, "Prochaines étapes post-MVP :", 0.8, 6.15, 12, 0.35, font_size=12, bold=True, color=ORANGE)
-add_text(slide, "Stockage S3  •  Rate limiting  •  httpOnly cookies  •  Envoi par email  •  App mobile",
-         0.8, 6.5, 11.5, 0.4, font_size=11, color=GRAY)
+for i, (titre, desc) in enumerate(livrables):
+    y = 1.35 + i * 0.72
+    rect(slide, 0.6, y, 0.55, 0.55, GREEN_L, GREEN, 0.8)
+    txt(slide, "✅", 0.6, y+0.05, 0.55, 0.45, size=14, align=PP_ALIGN.CENTER, color=GREEN_DARK)
+    txt(slide, titre, 1.3, y+0.03, 4.5, 0.3,  size=12, bold=True, color=DARK)
+    txt(slide, desc,  1.3, y+0.32, 11.2, 0.3, size=10, color=GRAY)
+
+rect(slide, 0.6, 6.55, 12.1, 0.06, ORANGE)
+txt(slide, "Prochaines étapes post-MVP :  "
+    "Stockage S3 · Rate limiting · httpOnly cookies · Email de partage · App mobile React Native",
+    0.6, 6.68, 12.1, 0.38, size=10, color=GRAY, italic=True)
 
 
-# ── SLIDE 10 — Questions ──────────────────────────────────────────────────────
+# ═══════════════════════════════════════════════════════════════════════════════
+# SLIDE 13 — Questions
+# ═══════════════════════════════════════════════════════════════════════════════
 slide = prs.slides.add_slide(BLANK)
 gradient_bg(slide)
 
-add_text(slide, "DataShare", 1, 2.0, 11, 1.2, font_size=72, bold=True,
-         color=DARK, align=PP_ALIGN.CENTER)
-add_rect(slide, 4, 3.3, 5.33, 0.07, WHITE)
-add_text(slide, "Questions ?", 1, 3.5, 11, 0.9, font_size=32, color=WHITE,
-         align=PP_ALIGN.CENTER)
-add_text(slide, "Démo live : http://localhost:5173", 1, 4.5, 11, 0.6,
-         font_size=16, color=WHITE, align=PP_ALIGN.CENTER, italic=True)
-add_text(slide, "Copyright DataShare© 2025", 0.5, 7.0, 12, 0.4,
-         font_size=10, color=WHITE, align=PP_ALIGN.CENTER)
+txt(slide, "DataShare", 1, 1.6, 11, 1.4,
+    size=72, bold=True, color=DARK, align=PP_ALIGN.CENTER)
+rect(slide, 3.8, 3.15, 5.7, 0.08, WHITE)
+txt(slide, "Questions ?", 1, 3.35, 11, 0.9,
+    size=34, color=WHITE, align=PP_ALIGN.CENTER, bold=True)
+txt(slide, "Démo live disponible : http://localhost:5173",
+    1, 4.4, 11, 0.6, size=15, color=DARK, align=PP_ALIGN.CENTER, italic=True)
+
+for i, (label, val) in enumerate([
+    ("User Stories", "8 / 8"),
+    ("Tests", "48 (38 + 10 E2E)"),
+    ("Couverture", "99 %"),
+]):
+    x = 2.3 + i * 3.0
+    s = slide.shapes.add_shape(1, Inches(x), Inches(5.3), Inches(2.6), Inches(1.0))
+    s.fill.solid(); s.fill.fore_color.rgb = RGBColor(0x00, 0x00, 0x00)
+    s.fill.transparency = 0.3; s.line.fill.background()
+    txt(slide, val,   x+0.1, 5.35, 2.4, 0.5, size=20, bold=True,
+        color=WHITE, align=PP_ALIGN.CENTER)
+    txt(slide, label, x+0.1, 5.82, 2.4, 0.38, size=10,
+        color=ACCENT, align=PP_ALIGN.CENTER)
+
+txt(slide, "© DataShare 2026", 0.5, 7.1, 12, 0.35,
+    size=9, color=WHITE, align=PP_ALIGN.CENTER)
 
 
 # ── Export ────────────────────────────────────────────────────────────────────

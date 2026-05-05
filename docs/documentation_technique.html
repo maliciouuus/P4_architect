@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Documentation Technique — DataShare MVP</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=DM+Sans:wght@400;700&display=swap');
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 11pt;
+      line-height: 1.7;
+      color: #1a1a1a;
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 20px 40px;
+    }
+
+    /* ── En-tête ── */
+    .cover {
+      text-align: center;
+      padding: 48px 0 40px;
+      border-bottom: 3px solid #FF812D;
+      margin-bottom: 40px;
+    }
+    .cover h1 {
+      font-size: 26pt;
+      font-weight: 700;
+      color: #111;
+      margin: 0 0 12px;
+      border: none;
+    }
+    .cover .subtitle {
+      font-size: 13pt;
+      color: #555;
+      margin: 4px 0;
+    }
+    .cover .meta {
+      font-size: 10pt;
+      color: #888;
+      margin-top: 16px;
+    }
+
+    /* ── Titres ── */
+    h1 {
+      font-size: 20pt;
+      font-weight: 700;
+      color: #111;
+      border-bottom: 2px solid #FF812D;
+      padding-bottom: 8px;
+      margin-top: 40px;
+    }
+    h2 {
+      font-size: 14pt;
+      font-weight: 700;
+      color: #222;
+      border-bottom: 1px solid #e0e0e0;
+      padding-bottom: 4px;
+      margin-top: 32px;
+    }
+    h3 { font-size: 12pt; font-weight: 700; color: #333; margin-top: 24px; }
+    h4 { font-size: 11pt; font-weight: 600; color: #555; margin-top: 18px; }
+
+    p { margin: 8px 0; }
+    ul, ol { margin: 8px 0; padding-left: 24px; }
+    li { margin: 4px 0; }
+
+    /* ── Code ── */
+    code {
+      background: #f5f5f5;
+      border: 1px solid #e0e0e0;
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-family: 'Courier New', monospace;
+      font-size: 9.5pt;
+      color: #c7254e;
+    }
+    pre {
+      background: #f8f8f8;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 14px 16px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      color: #333;
+      font-size: 9pt;
+      white-space: pre;
+    }
+
+    /* ── Tableaux ── */
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      margin: 14px 0;
+      font-size: 10pt;
+    }
+    th {
+      background: #FF812D;
+      color: white;
+      padding: 9px 12px;
+      text-align: left;
+      font-weight: 600;
+    }
+    td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #e0e0e0;
+      vertical-align: top;
+    }
+    tr:nth-child(even) { background: #fafafa; }
+
+    /* ── Divers ── */
+    blockquote {
+      border-left: 4px solid #FF812D;
+      margin: 12px 0;
+      padding: 8px 16px;
+      background: #fff8f5;
+      color: #555;
+    }
+    a { color: #FF812D; text-decoration: none; }
+    hr { border: none; border-top: 1px solid #e0e0e0; margin: 28px 0; }
+
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 20px auto;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+
+    /* ── Impression / PDF ── */
+    @page {
+      size: A4;
+      margin: 18mm 14mm 20mm;
+      @bottom-right {
+        content: counter(page) " / " counter(pages);
+        font-size: 9pt;
+        color: #999;
+      }
+      @bottom-left {
+        content: "DataShare MVP — Documentation Technique";
+        font-size: 9pt;
+        color: #bbb;
+      }
+    }
+
+    h1, h2 { page-break-after: avoid; }
+    table, pre, img { page-break-inside: avoid; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════════ COUVERTURE -->
+<div class="cover">
+  <h1>Documentation Technique</h1>
+  <p class="subtitle">DataShare — Plateforme de transfert sécurisé de fichiers</p>
+  <p class="meta">Rôle : Référent technique senior &nbsp;·&nbsp; Avril 2026 &nbsp;·&nbsp; Version 1.0</p>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════ SOMMAIRE -->
+<h1>Table des matières</h1>
+<ol>
+  <li><a href="#architecture">Architecture de l'application</a></li>
+  <li><a href="#techno">Choix technologiques justifiés</a></li>
+  <li><a href="#donnees">Modèle de données</a></li>
+  <li><a href="#api">Documentation d'API</a></li>
+  <li><a href="#securite">Sécurité et gestion des accès</a></li>
+  <li><a href="#qualite">Qualité, tests et maintenance</a></li>
+  <li><a href="#install">Processus d'installation et d'exécution</a></li>
+  <li><a href="#ia">Utilisation de l'IA dans le développement</a></li>
+</ol>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 1. ARCHI -->
+<h1 id="architecture">1. Architecture de l'application</h1>
+
+<h2>Vue d'ensemble</h2>
+<p>
+  DataShare suit une architecture <strong>client-serveur découplée</strong> : un frontend SPA
+  (Single Page Application) communique avec un backend API REST via HTTP/JSON. Les deux sont
+  containerisés et orchestrés avec Docker Compose.
+</p>
+
+<img src="architecture_diagram.png" alt="Diagramme d'architecture DataShare">
+
+<h2>Flux principaux</h2>
+
+<h3>Authentification</h3>
+<ol>
+  <li>Le client envoie <code>POST /api/auth/login/</code> avec identifiants</li>
+  <li>Le serveur retourne un access token (1&nbsp;h) + refresh token (7&nbsp;j)</li>
+  <li>Le client stocke les tokens et les joint à chaque requête protégée</li>
+</ol>
+
+<h3>Upload d'un fichier</h3>
+<ol>
+  <li>Le client envoie <code>POST /api/files/upload/</code> (multipart) avec le fichier, un mot de passe optionnel et une durée d'expiration</li>
+  <li>Le serveur valide (taille ≤ 50&nbsp;Mo, auth), hache le mot de passe, stocke le fichier sur disque</li>
+  <li>Le serveur retourne les métadonnées dont le <code>share_url</code> (lien de téléchargement)</li>
+</ol>
+
+<h3>Téléchargement</h3>
+<ol>
+  <li>Le destinataire ouvre le lien <code>/download/&lt;token&gt;</code></li>
+  <li>Le frontend interroge <code>GET /api/files/share/&lt;token&gt;/</code> pour les infos publiques</li>
+  <li>Si protégé, l'utilisateur saisit le mot de passe</li>
+  <li>Le téléchargement se déclenche via <code>GET /api/files/download/&lt;token&gt;/?password=...</code></li>
+</ol>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 2. TECHNO -->
+<h1 id="techno">2. Choix technologiques justifiés</h1>
+
+<table>
+  <thead>
+    <tr><th>Élément</th><th>Technologie choisie</th><th>Alternatives écartées</th><th>Justification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Langage back</td><td><strong>Python 3.12</strong></td><td>Java, Node.js, PHP</td><td>Productivité élevée, écosystème riche, adéquation avec Django</td></tr>
+    <tr><td>Framework back</td><td><strong>Django 5.2 + DRF</strong></td><td>FastAPI, Flask, Spring</td><td>Batteries incluses (ORM, auth, admin, migrations), DRF mature pour les API REST</td></tr>
+    <tr><td>Authentification</td><td><strong>JWT (simplejwt)</strong></td><td>Sessions, OAuth2</td><td>Stateless, compatible SPA, simple à implémenter</td></tr>
+    <tr><td>Langage front</td><td><strong>JavaScript (ES2023)</strong></td><td>TypeScript</td><td>Rapidité de développement pour un prototype, pas de surcoût de compilation</td></tr>
+    <tr><td>Framework front</td><td><strong>Vue.js 3</strong></td><td>React, Angular</td><td>Courbe d'apprentissage douce, Composition API puissante, Pinia natif</td></tr>
+    <tr><td>State management</td><td><strong>Pinia</strong></td><td>Vuex, Redux</td><td>API simple, TypeScript-friendly, officiel Vue 3</td></tr>
+    <tr><td>Base de données</td><td><strong>PostgreSQL 16</strong></td><td>MySQL, SQLite</td><td>Robustesse, support UUID natif, standard professionnel</td></tr>
+    <tr><td>Stockage fichiers</td><td><strong>Disque local</strong></td><td>S3, Cloudinary</td><td>Suffisant pour le prototype, migration S3 prévue en production</td></tr>
+    <tr><td>Containerisation</td><td><strong>Docker + Compose</strong></td><td>Déploiement manuel</td><td>Reproductibilité, onboarding simplifié, isolation des services</td></tr>
+    <tr><td>Tests back</td><td><strong>pytest + pytest-django</strong></td><td>unittest</td><td>Syntaxe concise, fixtures puissantes, excellent support Django</td></tr>
+  </tbody>
+</table>
+
+<h2>Justifications détaillées</h2>
+
+<h3>Python / Django — pourquoi ce choix face aux stacks du cahier des charges</h3>
+
+<p>Le cahier des charges cite Spring Boot, .NET Core, NestJS et PHP comme exemples de stacks back-end. Python/Django a été retenu car il satisfait l'ensemble des exigences techniques — et les dépasse sur plusieurs points critiques pour un MVP :</p>
+
+<table>
+  <thead>
+    <tr><th>Critère</th><th>NestJS (TypeScript)</th><th>Django (Python) ✓</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Architecture REST</td><td>NestJS Controllers</td><td>DRF ViewSets — framework dédié, plus mature (depuis 2011)</td></tr>
+    <tr><td>Authentification JWT</td><td>@nestjs/jwt (setup manuel)</td><td>simplejwt — 10 M+ installs/mois, rotation intégrée</td></tr>
+    <tr><td>ORM & migrations</td><td>TypeORM (config complexe)</td><td>ORM Django intégré — zéro configuration additionnelle</td></tr>
+    <tr><td>Tests intégrés</td><td>Jest (setup manuel)</td><td>pytest-django — fixtures natives, couverture HTML</td></tr>
+    <tr><td>Sécurité by default</td><td>À configurer manuellement</td><td>CSRF, XSS, injection SQL protégés nativement</td></tr>
+    <tr><td>Utilisé en production par</td><td>ADP, Adidas</td><td>Instagram (1 Md users), Pinterest, Mozilla, NASA</td></tr>
+    <tr><td>Maturité</td><td>2017 — 7 ans</td><td>2005 — 20 ans de battle-testing</td></tr>
+    <tr><td>Productivité MVP</td><td>Forte (TypeScript)</td><td>Maximale — "batteries incluses", admin auto-généré</td></tr>
+  </tbody>
+</table>
+
+<p><strong>Conclusion :</strong> Django répond à 100 % des exigences techniques avec une productivité supérieure pour un MVP sous contrainte de temps. Le gain estimé : ×3 sur l'implémentation des vues et sérialiseurs par rapport à une configuration NestJS équivalente.</p>
+
+<h3>Django REST Framework plutôt que FastAPI</h3>
+<p>FastAPI est excellent pour les APIs haute performance avec beaucoup d'endpoints asynchrones. Pour ce projet, DRF est préférable : sérialiseurs puissants, système de permissions intégré, pagination native, et une communauté de 10 M+ téléchargements mensuels garantissant la pérennité.</p>
+
+<h3>Vue.js 3 plutôt que React ou Angular</h3>
+<p>Vue.js 3 avec la Composition API offre une architecture proche de React, avec moins de boilerplate. L'écosystème cohérent (Vite + Pinia + Vue Router) permet un démarrage immédiat sans choix d'architecture. Bundle production de 139 Ko (54 Ko gzip), sous le seuil recommandé de 200 Ko. Angular aurait été surdimensionné pour un MVP.</p>
+
+<h3>JWT plutôt que sessions</h3>
+<p>L'architecture découplée frontend/backend rend les sessions serveur inadaptées : le backend ne sert pas les pages HTML, il n'y a pas de cookie de session à gérer. Le JWT est stateless et s'intègre naturellement dans une SPA via l'intercepteur Axios. La rotation du refresh token (chaque refresh invalide l'ancien) protège contre le vol de token.</p>
+
+<h3>PostgreSQL plutôt que MySQL ou SQLite</h3>
+<p>PostgreSQL offre le support natif des UUID (utilisés comme clé primaire et share_token), des transactions ACID robustes, et est le standard professionnel le plus déployé. L'image officielle Docker postgres:16-alpine est légère (78 Mo) et maintenue activement.</p>
+
+<h3>Docker Compose plutôt que déploiement manuel</h3>
+<p>La reproductibilité est totale : une seule commande <code>docker compose up -d</code> démarre les 3 services (frontend, backend, base de données), applique les migrations et monte les volumes. Zéro différence entre l'environnement du développeur et celui du correcteur.</p>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 3. DONNÉES -->
+<h1 id="donnees">3. Modèle de données</h1>
+
+<h2>Diagramme entité-relation</h2>
+<pre><code>┌─────────────────────────┐         ┌──────────────────────────────────┐
+│         USER            │         │          SHAREDFILE              │
+│  (Django built-in)      │         │                                  │
+├─────────────────────────┤         ├──────────────────────────────────┤
+│ id          INTEGER PK  │◄────────│ id            UUID PK            │
+│ username    VARCHAR(150)│  1   N  │ owner_id      INTEGER FK→User    │
+│ email       VARCHAR(254)│         │ original_name VARCHAR(255)       │
+│ password    VARCHAR(128)│         │ file          FileField          │
+│ date_joined DATETIME    │         │ size          BIGINT             │
+│ is_active   BOOLEAN     │         │ content_type  VARCHAR(100)       │
+└─────────────────────────┘         │ share_token   UUID UNIQUE        │
+                                    │ expires_at    DATETIME           │
+                                    │ created_at    DATETIME           │
+                                    │ password_hash VARCHAR(255)       │
+                                    └──────────────────────────────────┘</code></pre>
+
+<h2>Description des champs — SharedFile</h2>
+<table>
+  <thead>
+    <tr><th>Champ</th><th>Type</th><th>Rôle</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>UUID</td><td>Identifiant interne non exposé publiquement</td></tr>
+    <tr><td><code>owner</code></td><td>FK → User</td><td>Propriétaire du fichier</td></tr>
+    <tr><td><code>original_name</code></td><td>VARCHAR</td><td>Nom original conservé pour le téléchargement</td></tr>
+    <tr><td><code>file</code></td><td>FileField</td><td>Chemin vers le fichier stocké (<code>uploads/&lt;user_id&gt;/&lt;uuid&gt;_&lt;name&gt;</code>)</td></tr>
+    <tr><td><code>size</code></td><td>BIGINT</td><td>Taille en octets pour affichage</td></tr>
+    <tr><td><code>content_type</code></td><td>VARCHAR</td><td>MIME type pour l'en-tête <code>Content-Type</code> du téléchargement</td></tr>
+    <tr><td><code>share_token</code></td><td>UUID unique</td><td>Token opaque inclus dans le lien de partage</td></tr>
+    <tr><td><code>expires_at</code></td><td>DATETIME</td><td>Date d'expiration du lien</td></tr>
+    <tr><td><code>created_at</code></td><td>DATETIME</td><td>Date d'upload (automatique)</td></tr>
+    <tr><td><code>password_hash</code></td><td>VARCHAR</td><td>Hash PBKDF2 du mot de passe optionnel (vide si pas de protection)</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 4. API -->
+<h1 id="api">4. Documentation d'API</h1>
+
+<p>La spécification complète au format <strong>OpenAPI 3.0</strong> est disponible dans <code>docs/openapi.yaml</code>.</p>
+
+<h2>Endpoints résumés</h2>
+<table>
+  <thead>
+    <tr><th>Méthode</th><th>Endpoint</th><th>Auth</th><th>Description</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>POST</code></td><td><code>/api/auth/register/</code></td><td>Non</td><td>Créer un compte</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/auth/login/</code></td><td>Non</td><td>Connexion — retourne access + refresh token</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/auth/token/refresh/</code></td><td>Non</td><td>Rafraîchir le token d'accès</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/auth/me/</code></td><td>Oui</td><td>Profil de l'utilisateur connecté</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/files/</code></td><td>Oui</td><td>Liste de mes fichiers</td></tr>
+    <tr><td><code>POST</code></td><td><code>/api/files/upload/</code></td><td>Oui</td><td>Uploader un fichier</td></tr>
+    <tr><td><code>DELETE</code></td><td><code>/api/files/&lt;id&gt;/delete/</code></td><td>Oui</td><td>Supprimer un fichier</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/files/share/&lt;token&gt;/</code></td><td>Non</td><td>Infos publiques d'un fichier partagé</td></tr>
+    <tr><td><code>GET</code></td><td><code>/api/files/download/&lt;token&gt;/</code></td><td>Non</td><td>Télécharger un fichier via son lien</td></tr>
+  </tbody>
+</table>
+
+<h2>Exemple — Upload</h2>
+
+<p><strong>Requête</strong></p>
+<pre><code>POST /api/files/upload/
+Authorization: Bearer &lt;access_token&gt;
+Content-Type: multipart/form-data
+
+file=&lt;binary&gt;
+password=motdepasse123   (optionnel)
+expiry_hours=72          (optionnel, défaut: 168 = 7 jours)</code></pre>
+
+<p><strong>Réponse 201</strong></p>
+<pre><code>{
+  "id": "550e8400-e29b-41d4-a716-446655440000",
+  "original_name": "rapport.pdf",
+  "size": 2621440,
+  "share_token": "7f9d6a3b-1c2e-4f5a-8b9d-0e1f2a3b4c5d",
+  "share_url": "http://localhost:5173/download/7f9d6a3b-...",
+  "expires_at": "2026-04-27T14:00:00Z",
+  "is_expired": false,
+  "is_password_protected": true
+}</code></pre>
+
+<h2>Codes d'erreur</h2>
+<table>
+  <thead>
+    <tr><th>Code</th><th>Signification</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>400</td><td>Données invalides (champ manquant, mot de passe trop faible)</td></tr>
+    <tr><td>401</td><td>Non authentifié ou token expiré</td></tr>
+    <tr><td>403</td><td>Mot de passe de fichier incorrect</td></tr>
+    <tr><td>404</td><td>Ressource introuvable</td></tr>
+    <tr><td>410</td><td>Lien de téléchargement expiré</td></tr>
+    <tr><td>413</td><td>Fichier trop grand (max 1 Go)</td></tr>
+  </tbody>
+</table>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 5. SÉCURITÉ -->
+<h1 id="securite">5. Sécurité et gestion des accès</h1>
+
+<h2>Authentification</h2>
+<ul>
+  <li><strong>Mécanisme</strong> : JWT via <code>djangorestframework-simplejwt</code></li>
+  <li><strong>Access token</strong> : 1 heure de validité, signé HS256</li>
+  <li><strong>Refresh token</strong> : 7 jours, rotation activée (chaque refresh invalide l'ancien)</li>
+  <li><strong>Transport</strong> : header <code>Authorization: Bearer &lt;token&gt;</code></li>
+</ul>
+
+<h2>Gestion des accès</h2>
+<ul>
+  <li>Tous les endpoints <code>/api/files/</code> nécessitent un JWT valide <strong>sauf</strong> les endpoints publics de partage et téléchargement</li>
+  <li>Isolation stricte : un utilisateur ne peut accéder qu'à ses propres fichiers (filtre <code>owner=request.user</code> côté serveur)</li>
+  <li>Les tokens de partage sont des <strong>UUID v4</strong> (128 bits d'entropie) — non devinables par force brute</li>
+</ul>
+
+<h2>Protection des fichiers par mot de passe</h2>
+<ul>
+  <li>Le mot de passe est haché avec <strong>PBKDF2-SHA256</strong> (algorithme Django par défaut)</li>
+  <li>Le hash est stocké en base, le mot de passe en clair n'est jamais persisté</li>
+  <li>La vérification s'effectue au moment du téléchargement via query param sécurisé</li>
+</ul>
+
+<h2>Sécurité des mots de passe utilisateur</h2>
+<p>Validateurs Django activés :</p>
+<ul>
+  <li>Longueur minimale (8 caractères)</li>
+  <li>Similarité avec le nom d'utilisateur</li>
+  <li>Liste des mots de passe courants</li>
+  <li>Rejet des mots de passe entièrement numériques</li>
+</ul>
+
+<h2>Protections réseau</h2>
+<ul>
+  <li><strong>CORS</strong> : origines autorisées explicitement (pas de wildcard <code>*</code>)</li>
+  <li><strong>Limite d'upload</strong> : 50&nbsp;Mo validée côté serveur ET côté client</li>
+  <li><strong>En-têtes de sécurité</strong> Django : <code>X-Content-Type-Options</code>, <code>X-Frame-Options</code></li>
+</ul>
+
+<h2>Scan de sécurité (pip-audit)</h2>
+<p>
+  Aucune vulnérabilité dans les dépendances applicatives. Les 9 alertes détectées concernent uniquement
+  <code>pip</code> et <code>setuptools</code> du système hôte (outils de build non présents en production).
+</p>
+
+<h2>Points d'amélioration production</h2>
+<ul>
+  <li>Passer les tokens en <code>httpOnly cookies</code> (protection XSS)</li>
+  <li>Activer HTTPS + HSTS</li>
+  <li>Rate limiting sur les endpoints d'authentification</li>
+  <li>Stocker les fichiers sur S3 avec URLs signées</li>
+</ul>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 6. QUALITÉ -->
+<h1 id="qualite">6. Qualité, tests et maintenance</h1>
+
+<h2>Tests</h2>
+<table>
+  <thead>
+    <tr><th>Type</th><th>Outil</th><th>Résultat</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Unitaires + intégration</td><td>pytest + pytest-django</td><td><strong>38 tests, 99% de couverture</strong></td></tr>
+    <tr><td>E2E navigateur</td><td>Playwright (Chromium)</td><td><strong>10 tests, 100% passés</strong></td></tr>
+    <tr><td>Scan sécurité</td><td>pip-audit</td><td>0 vulnérabilité applicative</td></tr>
+    <tr><td>Performance endpoints</td><td>curl (mesures réelles)</td><td>Login: 227 ms moy, Upload 1 Mo: 59 ms moy</td></tr>
+  </tbody>
+</table>
+
+<p>
+  Les tests couvrent l'ensemble des cas nominaux et d'erreur : authentification, upload, suppression,
+  téléchargement, protection par mot de passe, expiration, isolation utilisateur.
+</p>
+
+<h2>Couverture de code (backend)</h2>
+<pre><code>Name                               Stmts   Miss  Cover
+------------------------------------------------------
+accounts/serializers.py               21      0   100%
+accounts/views.py                     14      0   100%
+files/models.py                       33      0   100%
+files/serializers.py                  23      0   100%
+files/views.py                        64      1    98%
+------------------------------------------------------
+TOTAL                                395      1    99%</code></pre>
+
+<h2>Performance</h2>
+<table>
+  <thead>
+    <tr><th>Endpoint</th><th>Temps moyen (dev)</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>POST /api/auth/login/</code></td><td>227 ms (hachage PBKDF2 intentionnel)</td></tr>
+    <tr><td><code>GET /api/files/</code></td><td>13 ms</td></tr>
+    <tr><td><code>POST /api/files/upload/</code> (1 Mo)</td><td>59 ms</td></tr>
+  </tbody>
+</table>
+
+<h2>Maintenance</h2>
+<p>Procédures documentées dans <code>MAINTENANCE.md</code> :</p>
+<ul>
+  <li>Mise à jour des dépendances (fréquence, commandes)</li>
+  <li>Sauvegardes BDD et fichiers</li>
+  <li>Nettoyage des fichiers expirés</li>
+  <li>Surveillance et logs</li>
+</ul>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 7. INSTALL -->
+<h1 id="install">7. Processus d'installation et d'exécution</h1>
+
+<h2>Prérequis</h2>
+<ul>
+  <li>Docker ≥ 24</li>
+  <li>Docker Compose ≥ 2.18</li>
+</ul>
+
+<h2>Lancement en 2 commandes</h2>
+<pre><code>git clone &lt;url-du-repo&gt;
+cd P4_architect
+docker compose up -d</code></pre>
+
+<p>L'application est disponible sur :</p>
+<ul>
+  <li><strong>Frontend</strong> : http://localhost:5173</li>
+  <li><strong>API</strong> : http://localhost:8000/api/</li>
+</ul>
+<p>Les migrations sont appliquées automatiquement au démarrage.</p>
+
+<h2>Variables d'environnement clés</h2>
+<table>
+  <thead>
+    <tr><th>Variable</th><th>Description</th><th>Défaut</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>DJANGO_SECRET_KEY</code></td><td>Clé secrète (à changer en prod)</td><td><code>dev-secret-key-...</code></td></tr>
+    <tr><td><code>DEBUG</code></td><td>Mode debug</td><td><code>True</code></td></tr>
+    <tr><td><code>DB_PASSWORD</code></td><td>Mot de passe PostgreSQL</td><td><code>datashare</code></td></tr>
+    <tr><td><code>SHARE_LINK_EXPIRY_HOURS</code></td><td>Durée de validité des liens</td><td><code>24</code></td></tr>
+    <tr><td><code>CORS_ALLOWED_ORIGINS</code></td><td>Origines frontend autorisées</td><td><code>http://localhost:5173</code></td></tr>
+  </tbody>
+</table>
+
+<h2>Lancer les tests</h2>
+<pre><code># Tests unitaires et d'intégration
+cd backend
+venv/bin/pytest
+
+# Tests E2E (application lancée au préalable)
+e2e/venv/bin/pytest e2e/ --browser chromium -v --base-url http://localhost:5173
+
+# Dans Docker
+docker compose exec backend pytest</code></pre>
+
+<hr>
+
+<!-- ══════════════════════════════════════════════════════════════ 8. IA -->
+<h1 id="ia">8. Utilisation de l'IA dans le développement</h1>
+
+<h2>Posture adoptée</h2>
+<p>
+  L'IA (Claude — Anthropic) a été utilisée comme <strong>copilote technique senior</strong> dans une
+  logique d'assignation de tâches structurées, avec supervision systématique du code produit. Cette
+  approche est différente du "vibe coding" : chaque bloc de code généré a été relu, testé et ajusté
+  avant intégration.
+</p>
+
+<h2>Tâches confiées à l'IA</h2>
+<p>La <strong>User Story US-Upload</strong> (téléversement de fichier) a été intégralement pilotée via l'IA, incluant :</p>
+<ul>
+  <li>Implémentation du modèle <code>SharedFile</code> avec champ <code>password_hash</code> et méthodes <code>set_password</code> / <code>check_password</code></li>
+  <li>Sérializers DRF (<code>SharedFileSerializer</code>, <code>FileUploadSerializer</code>, <code>FilePublicInfoSerializer</code>)</li>
+  <li>Vues <code>FileUploadView</code>, <code>FileDownloadView</code>, <code>FilePublicInfoView</code> avec gestion des cas d'erreur (410 expiré, 403 mauvais mot de passe, 413 trop grand)</li>
+  <li>Store Pinia <code>files.js</code> avec gestion de la progression d'upload</li>
+  <li>Composant <code>DashboardView.vue</code> (modal d'upload, liste de fichiers, filtres par onglet)</li>
+  <li>Composant <code>DownloadView.vue</code> (vérification mot de passe, badges d'expiration)</li>
+  <li>Suite de tests pytest complète (38 tests, 99% de couverture)</li>
+</ul>
+
+<h2>Rôle de supervision</h2>
+<p>En tant que référent technique :</p>
+<ul>
+  <li><strong>Définition des tâches</strong> : chaque prompt décrivait précisément le comportement attendu, les cas d'erreur et les contraintes de sécurité</li>
+  <li><strong>Revue du code</strong> : vérification de la logique métier, des validations côté serveur, de l'isolation utilisateur (filtre <code>owner=request.user</code>)</li>
+  <li><strong>Corrections apportées</strong> :
+    <ul>
+      <li>Ajout du filtre d'isolation par utilisateur sur la liste et la suppression (l'IA avait omis la vérification sur <code>FileDeleteView</code>)</li>
+      <li>Correction du <code>share_url</code> pour pointer vers le frontend Vue.js plutôt que l'API backend</li>
+      <li>Ajout de la gestion du refresh token dans l'intercepteur Axios (cas non couvert initialement)</li>
+      <li>Restructuration du layout desktop login (card disparaissait à cause d'un <code>flex-direction</code> mal appliqué)</li>
+    </ul>
+  </li>
+  <li><strong>Validation par les tests</strong> : aucun code n'a été intégré sans que les tests correspondants passent</li>
+</ul>
+
+<h2>Apports et limites constatés</h2>
+<table>
+  <thead>
+    <tr><th>Aspect</th><th>Observation</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Gain de temps</td><td>×3 sur l'implémentation des vues et sérializers</td></tr>
+    <tr><td>Qualité</td><td>Bonne sur le code standard, nécessite supervision sur la sécurité</td></tr>
+    <tr><td>Limites</td><td>Oublis sur l'isolation utilisateur, URLs hardcodées à corriger, gestion du refresh token incomplète</td></tr>
+    <tr><td>Design Figma</td><td>L'IA peut lire l'API Figma et reproduire fidèlement les tokens de design (couleurs, espacements, typographie)</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

@@ -123,13 +123,13 @@ CORS_ALLOWED_ORIGINS = os.environ.get(
     'http://localhost:5173,http://127.0.0.1:5173'
 ).split(',')
 
-# Limite d'upload : 50 Mo — vérifiée côté serveur (le client vérifie aussi)
-FILE_UPLOAD_MAX_MEMORY_SIZE = 52_428_800
-DATA_UPLOAD_MAX_MEMORY_SIZE = 52_428_800
-MAX_FILE_SIZE = 52_428_800
+# Limite d'upload : 1 Go — vérifiée côté serveur (le client vérifie aussi)
+FILE_UPLOAD_MAX_MEMORY_SIZE = 1_073_741_824
+DATA_UPLOAD_MAX_MEMORY_SIZE = 1_073_741_824
+MAX_FILE_SIZE = 1_073_741_824
 
-# Durée de validité par défaut des liens de partage (en heures)
-SHARE_LINK_EXPIRY_HOURS = int(os.environ.get('SHARE_LINK_EXPIRY_HOURS', 24))
+# Durée de validité par défaut des liens de partage (en heures) — 7 jours
+SHARE_LINK_EXPIRY_HOURS = int(os.environ.get('SHARE_LINK_EXPIRY_HOURS', 168))
 
 # ── Logs structurés ───────────────────────────────────────────────────────────
 # Chaque requête et chaque erreur est loggée avec timestamp, niveau et module.
