@@ -11,16 +11,16 @@
 
         <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-        <form @submit.prevent="handleLogin" class="form-stack">
+        <form @submit.prevent="handleLogin" class="form-stack" novalidate aria-label="Formulaire de connexion">
           <div class="field">
-            <label>Email</label>
-            <input v-model="username" type="text" placeholder="Saisissez votre email..."
-              required autocomplete="username" />
+            <label for="login-email">Email</label>
+            <input id="login-email" v-model="username" type="text" placeholder="Saisissez votre email..."
+              required aria-required="true" autocomplete="username" />
           </div>
           <div class="field">
-            <label>Mot de passe</label>
-            <input v-model="password" type="password" placeholder="Saisissez votre mot de passe..."
-              required autocomplete="current-password" />
+            <label for="login-password">Mot de passe</label>
+            <input id="login-password" v-model="password" type="password" placeholder="Saisissez votre mot de passe..."
+              required aria-required="true" autocomplete="current-password" />
           </div>
           <button type="button" class="btn-ghost-orange" @click="$router.push('/register')">
             Créer un compte

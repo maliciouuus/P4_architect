@@ -46,11 +46,13 @@
           <template v-if="!fileInfo.is_expired">
             <!-- Password field (si protégé) -->
             <div v-if="fileInfo.is_password_protected" class="field">
-              <label>Mot de passe</label>
+              <label for="dl-password">Mot de passe</label>
               <input
+                id="dl-password"
                 v-model="password"
                 type="password"
                 placeholder="Saisissez le mot de passe..."
+                aria-required="true"
                 @keyup.enter="doDownload"
               />
             </div>

@@ -11,21 +11,21 @@
 
         <div v-if="error" class="alert alert-error">{{ error }}</div>
 
-        <form @submit.prevent="handleRegister" class="form-stack">
+        <form @submit.prevent="handleRegister" class="form-stack" novalidate aria-label="Formulaire de création de compte">
           <div class="field">
-            <label>Email</label>
-            <input v-model="email" type="email" placeholder="Saisissez votre email..."
-              required autocomplete="email" />
+            <label for="reg-email">Email</label>
+            <input id="reg-email" v-model="email" type="email" placeholder="Saisissez votre email..."
+              required aria-required="true" autocomplete="email" />
           </div>
           <div class="field">
-            <label>Mot de passe</label>
-            <input v-model="password" type="password" placeholder="Saisissez votre mot de passe..."
-              required autocomplete="new-password" />
+            <label for="reg-password">Mot de passe</label>
+            <input id="reg-password" v-model="password" type="password" placeholder="Saisissez votre mot de passe..."
+              required aria-required="true" autocomplete="new-password" />
           </div>
           <div class="field">
-            <label>Vérification du mot de passe</label>
-            <input v-model="password2" type="password" placeholder="Saisissez le à nouveau..."
-              required autocomplete="new-password" />
+            <label for="reg-password2">Vérification du mot de passe</label>
+            <input id="reg-password2" v-model="password2" type="password" placeholder="Saisissez le à nouveau..."
+              required aria-required="true" autocomplete="new-password" />
           </div>
           <button type="button" class="btn-ghost-orange" @click="$router.push('/login')">
             J'ai déjà un compte
