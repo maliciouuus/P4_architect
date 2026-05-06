@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Documentation Technique — DataShare</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root {
+    --orange: #FF812D;
+    --orange-light: #FFF3E8;
+    --dark: #111827;
+    --gray-700: #374151;
+    --gray-500: #6B7280;
+    --gray-300: #D1D5DB;
+    --gray-100: #F3F4F6;
+    --blue: #2563EB;
+    --green: #059669;
+    --white: #FFFFFF;
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    font-size: 10.5pt;
+    color: var(--dark);
+    background: var(--white);
+    line-height: 1.65;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  /* ── Cover page ── */
+  .cover {
+    width: 210mm;
+    height: 297mm;
+    background: var(--dark);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    padding: 60px 70px;
+    page-break-after: always;
+    position: relative;
+    overflow: hidden;
+  }
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,129,45,0.25) 0%, transparent 70%);
+  }
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: -80px; left: -80px;
+    width: 350px; height: 350px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,129,45,0.12) 0%, transparent 70%);
+  }
+  .cover-tag {
+    font-size: 10pt;
+    color: var(--orange);
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .cover-title {
+    font-size: 52pt;
+    font-weight: 700;
+    color: #FFFFFF;
+    line-height: 1.05;
+    margin-bottom: 12px;
+  }
+  .cover-title span { color: var(--orange); }
+  .cover-sub {
+    font-size: 15pt;
+    color: #9CA3AF;
+    font-weight: 300;
+    margin-bottom: 48px;
+  }
+  .cover-divider {
+    width: 60px; height: 3px;
+    background: var(--orange);
+    border-radius: 2px;
+    margin-bottom: 40px;
+  }
+  .cover-meta { display: flex; gap: 40px; }
+  .cover-meta-item { }
+  .cover-meta-label { font-size: 8pt; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .cover-meta-value { font-size: 11pt; color: #E5E7EB; font-weight: 500; }
+  .cover-badges {
+    position: absolute;
+    bottom: 60px; right: 70px;
+    display: flex; gap: 10px;
+  }
+  .cover-badge {
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    color: #E5E7EB;
+    font-size: 8.5pt;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 500;
+  }
+
+  /* ── Content pages ── */
+  .page {
+    width: 210mm;
+    min-height: 297mm;
+    padding: 48px 56px 56px 56px;
+    page-break-after: always;
+    position: relative;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  /* Header stripe */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--gray-300);
+  }
+  .page-header-brand {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .page-header-section {
+    font-size: 9pt;
+    color: var(--gray-500);
+  }
+
+  /* Section title */
+  .section-number {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    color: var(--dark);
+    line-height: 1.2;
+    margin-bottom: 28px;
+  }
+  h2 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: var(--dark);
+    margin: 28px 0 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before {
+    content: '';
+    display: inline-block;
+    width: 4px; height: 18px;
+    background: var(--orange);
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  h3 {
+    font-size: 10.5pt;
+    font-weight: 600;
+    color: var(--gray-700);
+    margin: 18px 0 8px 0;
+  }
+
+  p { margin-bottom: 10px; }
+
+  /* Code */
+  code {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 9pt;
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: 4px;
+    padding: 1px 6px;
+    color: #C0392B;
+  }
+  pre {
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 8.5pt;
+    background: #1E2433;
+    color: #CDD6F4;
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin: 12px 0;
+    line-height: 1.6;
+    page-break-inside: avoid;
+    overflow: hidden;
+  }
+  pre .kw   { color: #CBA6F7; }
+  pre .str  { color: #A6E3A1; }
+  pre .cmt  { color: #6C7086; font-style: italic; }
+  pre .dec  { color: #89B4FA; }
+
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 9.5pt;
+    page-break-inside: avoid;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  thead tr { background: var(--dark); }
+  th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 9pt;
+    color: white;
+    letter-spacing: 0.3px;
+  }
+  td { padding: 9px 14px; border-bottom: 1px solid var(--gray-100); }
+  tbody tr:nth-child(odd) td { background: #FAFAFA; }
+  tbody tr:nth-child(even) td { background: white; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* Badges */
+  .badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 8pt;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+  .badge-orange { background: var(--orange-light); color: var(--orange); }
+  .badge-green { background: #D1FAE5; color: #065F46; }
+  .badge-blue { background: #DBEAFE; color: var(--blue); }
+  .badge-gray { background: var(--gray-100); color: var(--gray-500); }
+  .badge-red { background: #FEE2E2; color: #991B1B; }
+
+  /* Cards */
+  .card-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 16px 0;
+  }
+  .card {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+  }
+  .card-title {
+    font-size: 9.5pt;
+    font-weight: 700;
+    color: var(--dark);
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange); flex-shrink: 0;
+  }
+  .card-body { font-size: 9pt; color: var(--gray-700); line-height: 1.5; }
+
+  /* Architecture diagram */
+  .arch-diagram {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    margin: 16px 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+  }
+  .arch-box {
+    background: white;
+    border: 2px solid var(--gray-300);
+    border-radius: 10px;
+    padding: 14px 20px;
+    text-align: center;
+    min-width: 130px;
+    page-break-inside: avoid;
+  }
+  .arch-box.primary { border-color: var(--orange); }
+  .arch-box.secondary { border-color: var(--blue); }
+  .arch-box-icon { font-size: 22pt; margin-bottom: 6px; }
+  .arch-box-title { font-size: 9.5pt; font-weight: 700; color: var(--dark); }
+  .arch-box-sub { font-size: 8pt; color: var(--gray-500); margin-top: 3px; }
+  .arch-arrow {
+    font-size: 18pt; color: var(--orange);
+    margin: 0 8px;
+    align-self: center;
+  }
+  .arch-stack {
+    display: flex; flex-direction: column; gap: 10px; align-items: center;
+  }
+
+  /* Endpoint cards */
+  .endpoint {
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    margin: 12px 0;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .endpoint-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px;
+    background: #FAFAFA;
+    border-bottom: 1px solid var(--gray-300);
+  }
+  .method {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9pt; font-weight: 700;
+    padding: 3px 10px; border-radius: 5px;
+    min-width: 58px; text-align: center;
+  }
+  .method-get { background: #D1FAE5; color: #065F46; }
+  .method-post { background: #DBEAFE; color: #1E40AF; }
+  .method-delete { background: #FEE2E2; color: #991B1B; }
+  .endpoint-path {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5pt; font-weight: 600; color: var(--dark);
+  }
+  .endpoint-auth {
+    margin-left: auto;
+    font-size: 8pt; color: var(--gray-500);
+  }
+  .endpoint-body { padding: 12px 16px; font-size: 9pt; color: var(--gray-700); }
+
+  /* Callout */
+  .callout {
+    border-left: 4px solid var(--orange);
+    background: var(--orange-light);
+    padding: 12px 16px;
+    border-radius: 0 var(--radius) var(--radius) 0;
+    margin: 14px 0;
+    font-size: 9.5pt;
+  }
+  .callout.blue {
+    border-color: var(--blue);
+    background: #EFF6FF;
+  }
+  .callout.green {
+    border-color: var(--green);
+    background: #F0FDF4;
+  }
+
+  /* Stats row */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 16px 0;
+  }
+  .stat {
+    background: white;
+    border: 1px solid var(--gray-300);
+    border-radius: var(--radius);
+    padding: 16px;
+    text-align: center;
+  }
+  .stat-value { font-size: 22pt; font-weight: 700; color: var(--orange); line-height: 1; }
+  .stat-label { font-size: 8.5pt; color: var(--gray-500); margin-top: 4px; }
+
+  img { max-width: 100%; border-radius: var(--radius); }
+  ul { padding-left: 20px; margin: 8px 0; }
+  li { margin: 4px 0; }
+  strong { font-weight: 600; }
+
+  /* TOC */
+  .toc-item {
+    display: flex; align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dotted var(--gray-300);
+    font-size: 10pt;
+  }
+  .toc-num { color: var(--orange); font-weight: 700; width: 28px; flex-shrink: 0; }
+  .toc-title { flex: 1; }
+  .toc-page { color: var(--gray-500); font-size: 9pt; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <div class="cover-tag">Documentation Technique</div>
+  <div class="cover-title">Data<span>Share</span></div>
+  <div class="cover-sub">Plateforme de transfert sécurisé de fichiers</div>
+  <div class="cover-divider"></div>
+  <div class="cover-meta">
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Version</div>
+      <div class="cover-meta-value">2.0 — MVP</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Date</div>
+      <div class="cover-meta-value">Mai 2026</div>
+    </div>
+    <div class="cover-meta-item">
+      <div class="cover-meta-label">Mission</div>
+      <div class="cover-meta-value">OpenClassrooms — P4</div>
+    </div>
+  </div>
+  <div class="cover-badges">
+    <div class="cover-badge">NestJS</div>
+    <div class="cover-badge">Vue.js 3</div>
+    <div class="cover-badge">PostgreSQL</div>
+    <div class="cover-badge">Docker</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 1 — ARCHI -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">01 — Architecture</div>
+  </div>
+  <div class="section-number">Section 01</div>
+  <h1>Architecture de l'application</h1>
+
+  <p>DataShare suit une <strong>architecture 3-tiers</strong> avec séparation stricte des responsabilités entre présentation, logique métier et persistance.</p>
+
+  <div class="arch-diagram">
+    <div class="arch-box primary">
+      <div class="arch-box-icon">🖥️</div>
+      <div class="arch-box-title">Frontend</div>
+      <div class="arch-box-sub">Vue.js 3 + Pinia</div>
+      <div class="arch-box-sub">localhost:5173</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-box primary">
+      <div class="arch-box-icon">⚙️</div>
+      <div class="arch-box-title">API NestJS</div>
+      <div class="arch-box-sub">TypeScript</div>
+      <div class="arch-box-sub">localhost:8000</div>
+    </div>
+    <div class="arch-arrow">→</div>
+    <div class="arch-stack">
+      <div class="arch-box secondary">
+        <div class="arch-box-icon">🐘</div>
+        <div class="arch-box-title">PostgreSQL 16</div>
+        <div class="arch-box-sub">Base de données</div>
+      </div>
+      <div class="arch-box">
+        <div class="arch-box-icon">📁</div>
+        <div class="arch-box-title">Filesystem</div>
+        <div class="arch-box-sub">Stockage fichiers</div>
+      </div>
+    </div>
+  </div>
+
+  <h2>Flux d'une requête</h2>
+  <ol style="padding-left:20px; line-height:2">
+    <li>Le <strong>frontend Vue.js</strong> envoie les requêtes via Axios avec le préfixe <code>/api</code></li>
+    <li>Le <strong>proxy Vite</strong> redirige les appels vers NestJS sur le port 8000</li>
+    <li><strong>NestJS</strong> valide le JWT (guard), valide les données (DTO), délègue au Service</li>
+    <li>Le <strong>Service</strong> interagit avec PostgreSQL via TypeORM et le disque via <code>fs</code></li>
+    <li>La réponse JSON remonte en <strong>snake_case</strong> (compatibilité frontend)</li>
+  </ol>
+
+  <h2>Modules NestJS</h2>
+  <table>
+    <thead><tr><th>Module</th><th>Responsabilité</th><th>Routes</th></tr></thead>
+    <tbody>
+      <tr><td><code>AuthModule</code></td><td>Inscription, connexion, profil</td><td><code>/api/auth/*</code></td></tr>
+      <tr><td><code>FilesModule</code></td><td>Upload, download, historique, suppression, cron purge</td><td><code>/api/files/*</code></td></tr>
+    </tbody>
+  </table>
+
+  <div class="callout">
+    <strong>Déploiement :</strong> l'ensemble de l'application est conteneurisé avec Docker Compose — un seul <code>docker compose up -d</code> démarre la base de données, le backend et le frontend.
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 2 — CHOIX TECH -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">02 — Choix technologiques</div>
+  </div>
+  <div class="section-number">Section 02</div>
+  <h1>Choix technologiques justifiés</h1>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Backend — NestJS (TypeScript)</div>
+      <div class="card-body">
+        Architecture modulaire (Modules/Services/Controllers/Guards) imposant la séparation des responsabilités. TypeScript apporte le typage statique : erreurs détectées à la compilation. Décorateurs déclaratifs (<code>@Controller</code>, <code>@UseGuards</code>) lisibles et maintenables. Injection de dépendances intégrée → testabilité maximale par mock. Correspond aux exigences du cahier des charges.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Frontend — Vue.js 3 + Pinia + Vite</div>
+      <div class="card-body">
+        Composition API pour une meilleure réutilisabilité. Pinia remplace Vuex avec une API plus simple et compatible TypeScript. Vite offre un démarrage serveur instantané et un HMR ultra-rapide en développement. Courbe d'apprentissage douce pour une équipe mixte.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Base de données — PostgreSQL 16</div>
+      <div class="card-body">
+        Transactions ACID garanties. UUID natif et indexé — parfait pour les share_tokens non prédictibles. <code>timestamptz</code> inclut le fuseau horaire, évitant les bugs d'expiration. Contraintes <code>UNIQUE</code> et <code>CASCADE</code> assurées par la base, pas seulement l'application.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Authentification — JWT</div>
+      <div class="card-body">
+        Stateless — pas de session côté serveur, simplifie le déploiement horizontal. Durée 7 jours pour le confort utilisateur sur un prototype. bcrypt coût 12 pour le hashage — résistant au brute-force. <code>passport-jwt</code> s'intègre nativement dans l'écosystème NestJS.
+      </div>
+    </div>
+  </div>
+
+  <h2>Stockage — Système de fichiers local</h2>
+  <p>Zéro dépendance externe pour un MVP. Chemin structuré <code>uploads/&lt;userId&gt;/&lt;uuid&gt;_&lt;filename&gt;</code> évite les collisions. Streaming avec <code>fs.createReadStream().pipe(res)</code> — pas de chargement en mémoire, critique pour les fichiers jusqu'à 1 Go. Migration vers AWS S3 prévue en production (la variable <code>UPLOAD_DIR</code> isole cette dépendance).</p>
+
+  <h2>Comparaison des alternatives écartées</h2>
+  <table>
+    <thead><tr><th>Composant</th><th>Choix retenu</th><th>Alternative écartée</th><th>Raison</th></tr></thead>
+    <tbody>
+      <tr><td>Backend</td><td><span class="badge badge-green">NestJS</span></td><td>Express.js</td><td>Trop permissif, pas de structure imposée</td></tr>
+      <tr><td>Backend</td><td><span class="badge badge-green">NestJS</span></td><td>Django</td><td>Non listé dans les contraintes techniques</td></tr>
+      <tr><td>Base de données</td><td><span class="badge badge-green">PostgreSQL</span></td><td>MongoDB</td><td>Relations entre entités → SQL plus adapté</td></tr>
+      <tr><td>State management</td><td><span class="badge badge-green">Pinia</span></td><td>Vuex</td><td>API plus simple, TypeScript natif</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 3 — DONNÉES -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">03 — Modèle de données</div>
+  </div>
+  <div class="section-number">Section 03</div>
+  <h1>Modèle de données</h1>
+
+  <img src="er_diagram.png" alt="Diagramme entité-relation DataShare" style="width:100%; margin: 16px 0;" />
+
+  <h2>Table — User (accounts_user_nest)</h2>
+  <table>
+    <thead><tr><th>Colonne</th><th>Type</th><th>Contrainte</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>id</strong></td><td><code>INTEGER</code></td><td><span class="badge badge-orange">PK AUTO</span></td><td>Identifiant interne auto-incrémenté</td></tr>
+      <tr><td>email</td><td><code>VARCHAR</code></td><td><span class="badge badge-blue">UNIQUE</span></td><td>Email de connexion — identifiant principal</td></tr>
+      <tr><td>username</td><td><code>VARCHAR</code></td><td>NOT NULL</td><td>Nom d'affichage</td></tr>
+      <tr><td>password</td><td><code>VARCHAR</code></td><td>NOT NULL</td><td>Hash bcrypt — jamais stocké en clair</td></tr>
+      <tr><td>created_at</td><td><code>TIMESTAMPTZ</code></td><td>AUTO</td><td>Date d'inscription (auto)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Table — SharedFile (shared_files_nest)</h2>
+  <table>
+    <thead><tr><th>Colonne</th><th>Type</th><th>Contrainte</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><strong>id</strong></td><td><code>UUID</code></td><td><span class="badge badge-orange">PK</span></td><td>UUID v4 — non prédictible</td></tr>
+      <tr><td>owner_id</td><td><code>INTEGER</code></td><td><span class="badge badge-blue">FK NULL</span></td><td>Propriétaire (null = upload anonyme)</td></tr>
+      <tr><td>original_name</td><td><code>VARCHAR</code></td><td>NOT NULL</td><td>Nom du fichier pour Content-Disposition</td></tr>
+      <tr><td>file_path</td><td><code>VARCHAR</code></td><td>NOT NULL</td><td>Chemin absolu sur le disque</td></tr>
+      <tr><td>size</td><td><code>BIGINT</code></td><td>NOT NULL</td><td>Taille en octets (jusqu'à 1 Go)</td></tr>
+      <tr><td>content_type</td><td><code>VARCHAR</code></td><td>NOT NULL</td><td>Type MIME (ex: <code>application/pdf</code>)</td></tr>
+      <tr><td>share_token</td><td><code>VARCHAR</code></td><td><span class="badge badge-blue">UNIQUE</span></td><td>UUID v4 — inclus dans le lien de partage</td></tr>
+      <tr><td>expires_at</td><td><code>TIMESTAMPTZ</code></td><td>NOT NULL</td><td>Date d'expiration du lien</td></tr>
+      <tr><td>password_hash</td><td><code>VARCHAR</code></td><td>DEFAULT ''</td><td>Hash bcrypt (vide = pas de protection)</td></tr>
+      <tr><td>created_at</td><td><code>TIMESTAMPTZ</code></td><td>AUTO</td><td>Date d'upload</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 4 — API -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">04 — Documentation API</div>
+  </div>
+  <div class="section-number">Section 04</div>
+  <h1>Documentation d'API</h1>
+
+  <div class="callout blue"><strong>Base URL :</strong> <code>http://localhost:8000/api</code> &nbsp;|&nbsp; Auth : <code>Authorization: Bearer &lt;JWT&gt;</code></div>
+
+  <h2>Authentification</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-post">POST</div>
+      <div class="endpoint-path">/auth/register</div>
+      <div class="endpoint-auth">Public</div>
+    </div>
+    <div class="endpoint-body">
+      <strong>Body :</strong> <code>{ email, username, password (min 8) }</code><br>
+      <strong>201</strong> <code>{ id, email, username }</code> &nbsp;|&nbsp; <strong>409</strong> Email déjà utilisé &nbsp;|&nbsp; <strong>400</strong> Données invalides
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-post">POST</div>
+      <div class="endpoint-path">/auth/login</div>
+      <div class="endpoint-auth">Public</div>
+    </div>
+    <div class="endpoint-body">
+      <strong>Body :</strong> <code>{ email, password }</code><br>
+      <strong>200</strong> <code>{ access_token, user: { id, email, username } }</code> &nbsp;|&nbsp; <strong>401</strong> Identifiants invalides
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-get">GET</div>
+      <div class="endpoint-path">/auth/me</div>
+      <div class="endpoint-auth">🔒 JWT requis</div>
+    </div>
+    <div class="endpoint-body">
+      <strong>200</strong> <code>{ id, email, username }</code> &nbsp;|&nbsp; <strong>401</strong> Token invalide
+    </div>
+  </div>
+
+  <h2>Fichiers</h2>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-get">GET</div>
+      <div class="endpoint-path">/files</div>
+      <div class="endpoint-auth">🔒 JWT requis</div>
+    </div>
+    <div class="endpoint-body">
+      Historique des fichiers de l'utilisateur connecté.<br>
+      <strong>200</strong> Array de fichiers avec <code>share_url</code>, <code>is_expired</code>, <code>is_password_protected</code>
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-post">POST</div>
+      <div class="endpoint-path">/files/upload</div>
+      <div class="endpoint-auth">🔒 JWT requis</div>
+    </div>
+    <div class="endpoint-body">
+      <strong>multipart/form-data :</strong> <code>file</code> (requis), <code>password</code> (optionnel, min 6), <code>expiry_hours</code> (1–168)<br>
+      <strong>201</strong> Fichier créé &nbsp;|&nbsp; <strong>403</strong> Extension interdite &nbsp;|&nbsp; <strong>413</strong> Fichier > 1 Go
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-post">POST</div>
+      <div class="endpoint-path">/files/upload/anonymous</div>
+      <div class="endpoint-auth">Public</div>
+    </div>
+    <div class="endpoint-body">Même paramètres que l'upload connecté. Le fichier n'est lié à aucun compte (owner = null).</div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-delete">DELETE</div>
+      <div class="endpoint-path">/files/:id</div>
+      <div class="endpoint-auth">🔒 JWT requis</div>
+    </div>
+    <div class="endpoint-body">
+      Suppression physique (disque) + métadonnées (base). <strong>200</strong> OK &nbsp;|&nbsp; <strong>404</strong> Fichier inexistant ou appartenant à un autre utilisateur
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-get">GET</div>
+      <div class="endpoint-path">/files/share/:token</div>
+      <div class="endpoint-auth">Public</div>
+    </div>
+    <div class="endpoint-body">
+      Métadonnées publiques : <code>original_name</code>, <code>size</code>, <code>expires_at</code>, <code>is_expired</code>, <code>is_password_protected</code><br>
+      <strong>200</strong> OK &nbsp;|&nbsp; <strong>404</strong> Token inconnu
+    </div>
+  </div>
+
+  <div class="endpoint">
+    <div class="endpoint-header">
+      <div class="method method-get">GET</div>
+      <div class="endpoint-path">/files/download/:token?password=xxx</div>
+      <div class="endpoint-auth">Public</div>
+    </div>
+    <div class="endpoint-body">
+      Streaming binaire du fichier. <strong>200</strong> OK &nbsp;|&nbsp; <strong>403</strong> Mot de passe incorrect &nbsp;|&nbsp; <strong>410</strong> Lien expiré &nbsp;|&nbsp; <strong>404</strong> Token inconnu
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 5 — SÉCURITÉ -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">05 — Sécurité</div>
+  </div>
+  <div class="section-number">Section 05</div>
+  <h1>Sécurité et gestion des accès</h1>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>JWT — Authentification stateless</div>
+      <div class="card-body">Tokens HMAC-SHA256, durée 7 jours. Clé secrète en variable d'environnement. <code>passport-jwt</code> valide chaque requête protégée. Payload minimal : <code>{ sub, email }</code>.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>bcrypt — Hashage des mots de passe</div>
+      <div class="card-body">Coût 12 itérations. Appliqué aux mots de passe utilisateurs ET aux mots de passe de fichiers. Jamais retourné dans les réponses API. Message d'erreur identique (email inconnu = mauvais MDP).</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Isolation des données</div>
+      <div class="card-body">Chaque requête filtre par <code>ownerId = req.user.id</code>. La suppression retourne 404 (pas 403) si le fichier appartient à un autre — ne révèle pas l'existence.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Validation des entrées</div>
+      <div class="card-body"><code>class-validator</code> sur tous les DTOs. <code>ValidationPipe</code> global avec <code>whitelist: true</code>. Vérifications serveur : taille max 1 Go, extensions interdites (<code>.exe</code>, <code>.bat</code>…), durée 1–168h.</div>
+    </div>
+  </div>
+
+  <h2>Scan de sécurité des dépendances</h2>
+  <pre>$ npm audit
+
+found 0 vulnerabilities</pre>
+
+  <div class="callout green"><strong>Résultat :</strong> aucune vulnérabilité CVE détectée dans les dépendances de production NestJS (Mai 2026).</div>
+
+  <h2>Tokens de partage</h2>
+  <p>Les liens de partage utilisent des <strong>UUID v4</strong> (128 bits d'entropie). La probabilité de deviner un token valide est de 1 sur 2¹²², soit environ 1 sur 5 × 10³⁶ — pratiquement impossible.</p>
+
+  <h2>Améliorations prévues pour la production</h2>
+  <table>
+    <thead><tr><th>Amélioration</th><th>Priorité</th><th>Raison</th></tr></thead>
+    <tbody>
+      <tr><td>Cookies <code>httpOnly</code> (remplacement localStorage)</td><td><span class="badge badge-red">Haute</span></td><td>Protection XSS</td></tr>
+      <tr><td>HTTPS / TLS</td><td><span class="badge badge-red">Haute</span></td><td>Chiffrement en transit</td></tr>
+      <tr><td>Rate limiting sur <code>/api/auth/*</code></td><td><span class="badge badge-red">Haute</span></td><td>Protection brute-force</td></tr>
+      <tr><td>Migration fichiers vers AWS S3</td><td><span class="badge badge-orange">Moyenne</span></td><td>Scalabilité</td></tr>
+      <tr><td>Scan antivirus uploads (ClamAV)</td><td><span class="badge badge-orange">Moyenne</span></td><td>Sécurité malware</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 6 — TESTS -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">06 — Qualité & Tests</div>
+  </div>
+  <div class="section-number">Section 06</div>
+  <h1>Qualité, tests et maintenance</h1>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-value">18</div><div class="stat-label">Tests unitaires</div></div>
+    <div class="stat"><div class="stat-value">18/18</div><div class="stat-label">Tests passants</div></div>
+    <div class="stat"><div class="stat-value">~87%</div><div class="stat-label">Couverture services</div></div>
+    <div class="stat"><div class="stat-value">0</div><div class="stat-label">Vulnérabilités npm</div></div>
+  </div>
+
+  <h2>Tests unitaires — Jest</h2>
+
+  <table>
+    <thead><tr><th>Fichier</th><th>Tests</th><th>US couvertes</th><th>Statements</th></tr></thead>
+    <tbody>
+      <tr><td><code>auth.service.spec.ts</code></td><td>7</td><td>US03, US04</td><td>86.6%</td></tr>
+      <tr><td><code>files.service.spec.ts</code></td><td>11</td><td>US01, US02, US05, US06, US09</td><td>89%</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Stratégie de mock</h2>
+  <table>
+    <thead><tr><th>Dépendance</th><th>Stratégie</th><th>Raison</th></tr></thead>
+    <tbody>
+      <tr><td>Repository TypeORM</td><td>Mock complet <code>jest.fn()</code></td><td>Pas de vraie base de données</td></tr>
+      <tr><td><code>fs</code> (filesystem)</td><td>Mock partiel (<code>jest.requireActual</code>)</td><td>TypeORM utilise fs en interne</td></tr>
+      <tr><td><code>bcrypt</code></td><td>Mock complet</td><td>Tester les appels, pas l'algorithme</td></tr>
+      <tr><td><code>uuid</code></td><td>Mock (valeur fixe)</td><td>Assertions prédictibles</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Exécution des tests</h2>
+  <pre>cd backend-nest
+npm test            # 18 tests unitaires
+npm run test:cov    # Rapport de couverture HTML</pre>
+
+  <h2>Maintenance des dépendances</h2>
+  <table>
+    <thead><tr><th>Type</th><th>Fréquence</th><th>Commande</th></tr></thead>
+    <tbody>
+      <tr><td>Correctifs de sécurité</td><td>Immédiat</td><td><code>npm audit fix</code></td></tr>
+      <tr><td>Mises à jour mineures</td><td>Mensuelle</td><td><code>npm update</code></td></tr>
+      <tr><td>Mises à jour majeures</td><td>Trimestrielle</td><td>Évaluation + branche dédiée</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 7 — INSTALL -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">07 — Installation</div>
+  </div>
+  <div class="section-number">Section 07</div>
+  <h1>Processus d'installation et d'exécution</h1>
+
+  <h2>Prérequis</h2>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Docker (recommandé)</div>
+      <div class="card-body">Docker ≥ 24 &amp; Docker Compose ≥ 2.20<br>Un seul commande pour tout lancer.</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><div class="card-dot"></div>Développement local</div>
+      <div class="card-body">Node.js ≥ 20<br>PostgreSQL 16 (ou via Docker)</div>
+    </div>
+  </div>
+
+  <h2>Installation rapide (Docker)</h2>
+  <pre>git clone https://github.com/maliciouuus/P4_architect
+cd P4_architect
+docker compose up -d
+# Frontend : http://localhost:5173
+# API      : http://localhost:8000/api</pre>
+
+  <h2>Installation développement local</h2>
+  <pre># 1. Base de données
+docker compose up -d db
+
+# 2. Backend NestJS
+cd backend-nest
+npm install
+npm run start:dev     # http://localhost:8000
+
+# 3. Frontend Vue.js
+cd ../frontend
+npm install
+npm run dev           # http://localhost:5173</pre>
+
+  <h2>Variables d'environnement</h2>
+  <table>
+    <thead><tr><th>Variable</th><th>Défaut</th><th>Description</th></tr></thead>
+    <tbody>
+      <tr><td><code>DATABASE_URL</code></td><td><code>postgresql://datashare:datashare@...</code></td><td>Connexion PostgreSQL</td></tr>
+      <tr><td><code>JWT_SECRET</code></td><td><code>change_me_in_production</code></td><td><strong>À changer en production</strong></td></tr>
+      <tr><td><code>MAX_FILE_SIZE</code></td><td><code>1073741824</code></td><td>Taille max en octets (1 Go)</td></tr>
+      <tr><td><code>SHARE_LINK_EXPIRY_HOURS</code></td><td><code>168</code></td><td>Durée de validité (7 jours)</td></tr>
+      <tr><td><code>UPLOAD_DIR</code></td><td><code>uploads</code></td><td>Dossier de stockage</td></tr>
+      <tr><td><code>FRONTEND_URL</code></td><td><code>http://localhost:5173</code></td><td>CORS + liens de partage</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Configuration base de données</h2>
+  <pre>-- scripts/setup_db.sql
+CREATE USER datashare WITH PASSWORD 'datashare';
+CREATE DATABASE datashare OWNER datashare;
+GRANT ALL PRIVILEGES ON DATABASE datashare TO datashare;</pre>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════ PAGE 8 — IA -->
+<div class="page">
+  <div class="page-header">
+    <div class="page-header-brand">DataShare</div>
+    <div class="page-header-section">08 — Utilisation de l'IA</div>
+  </div>
+  <div class="section-number">Section 08</div>
+  <h1>Utilisation de l'IA dans le développement</h1>
+
+  <p>L'IA (Claude — Anthropic) a été utilisée comme <strong>outil de support technique</strong> sur des tâches périphériques au développement : génération de tests, aide sur des commandes complexes, débogage et documentation. Le code métier de l'application (backend NestJS, frontend Vue.js, logique d'authentification, gestion des fichiers) a été entièrement écrit par le développeur.</p>
+
+  <h2>Tâches confiées à l'IA</h2>
+  <table>
+    <thead><tr><th>Domaine</th><th>Tâche confiée</th><th>Rôle du développeur</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><strong>Tests unitaires</strong></td>
+        <td>Génération des squelettes de tests Jest pour les controllers et la stratégie JWT (fichiers <code>*.controller.spec.ts</code>, <code>jwt.strategy.spec.ts</code>)</td>
+        <td>Définition de la stratégie de mock, correction des problèmes d'import natif (bcrypt/typeorm), validation que les assertions testent bien le comportement attendu</td>
+      </tr>
+      <tr>
+        <td><strong>Commandes terminal</strong></td>
+        <td>Aide sur des commandes complexes : configuration Docker Compose, génération du rapport de couverture Jest, commandes TypeORM pour les migrations, scripts Python pour les PDFs</td>
+        <td>Adaptation au contexte du projet, vérification que les commandes correspondent à la stack utilisée (Node 16, NestJS 11)</td>
+      </tr>
+      <tr>
+        <td><strong>Débogage</strong></td>
+        <td>Identification de la cause des erreurs TypeScript à la compilation, incompatibilités entre modules NestJS lors des tests</td>
+        <td>Compréhension de la cause racine, décision de la correction à appliquer</td>
+      </tr>
+      <tr>
+        <td><strong>Documentation</strong></td>
+        <td>Aide à la rédaction des fichiers TESTING.md, SECURITY.md, PERF.md, MAINTENANCE.md et de cette documentation technique</td>
+        <td>Définition du contenu, révision de chaque section, ajustement selon les exigences du cahier des charges</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h2>Ce qui n'a pas été délégué à l'IA</h2>
+  <ul>
+    <li><strong>Architecture de l'application</strong> — choix NestJS/Vue/PostgreSQL, découpage en modules, conception des entités</li>
+    <li><strong>Logique métier</strong> — services d'authentification, gestion des fichiers, token de partage, expiration automatique</li>
+    <li><strong>Sécurité</strong> — décisions bcrypt coût 12, JWT, CORS, validation DTOs, contrôle d'accès par ownerId</li>
+    <li><strong>Interface utilisateur</strong> — toutes les vues Vue.js, le routeur, les stores Pinia</li>
+  </ul>
+
+  <h2>Supervision appliquée</h2>
+  <div class="callout">
+    Chaque suggestion de l'IA a été relue et validée avant d'être intégrée. Par exemple, les tests générés utilisaient initialement des imports directs de <code>bcrypt</code> qui échouaient à cause du module natif node-gyp — le développeur a identifié le problème et décidé de la stratégie de mock correcte (<code>jest.mock('bcrypt')</code> + <code>jest.mock('typeorm')</code>).
+  </div>
+
+  <h2>Bilan</h2>
+  <p>L'IA a accéléré les tâches répétitives ou techniques (tests, commandes, documentation) sans se substituer au raisonnement architectural. Le développeur est resté décisionnaire sur chaque choix structurant du projet.</p>
+
+  <div class="card-grid" style="margin-top:20px">
+    <div class="stat"><div class="stat-value">9</div><div class="stat-label">Endpoints API</div></div>
+    <div class="stat"><div class="stat-value">32</div><div class="stat-label">Tests unitaires</div></div>
+    <div class="stat"><div class="stat-value">78%</div><div class="stat-label">Couverture</div></div>
+    <div class="stat"><div class="stat-value">0</div><div class="stat-label">Vulnérabilités</div></div>
+  </div>
+</div>
+
+</body>
+</html>

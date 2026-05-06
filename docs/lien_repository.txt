@@ -1,0 +1,15 @@
+Repository GitHub — DataShare MVP
+===================================
+
+URL : https://github.com/maliciouuus/P4_architect
+
+Contenu du repository :
+- code source complet (backend NestJS + frontend Vue.js 3)
+- historique de commits Git structuré
+- README détaillé avec instructions d'installation
+- Scripts de déploiement (docker-compose.yml, scripts/setup_db.sql)
+- Plan de suivi qualité et maintenance :
+    - TESTING.md
+    - SECURITY.md
+    - PERF.md
+    - MAINTENANCE.md
