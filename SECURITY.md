@@ -1,75 +1,107 @@
 # Sécurité — DataShare
 
-## Authentification
+## Scan de sécurité des dépendances
 
-- **JWT** (JSON Web Tokens) via `djangorestframework-simplejwt`
-- Access token : durée de vie **1 heure**
-- Refresh token : durée de vie **7 jours**, rotation activée
-- Tokens stockés en `localStorage` côté client (acceptable pour un prototype)
-- Le refresh est automatiquement tenté par l'intercepteur Axios si le token est expiré
+### Commande exécutée
 
-## Gestion des accès
+```bash
+cd backend-nest
+npm audit
+```
 
-- Tous les endpoints `/api/files/` requièrent un token JWT valide sauf :
-  - `GET /api/files/share/<token>/` — infos publiques (pas de données sensibles)
-  - `GET /api/files/download/<token>/` — téléchargement public via lien opaque
-- Isolation stricte : un utilisateur ne peut voir/supprimer que ses propres fichiers (filtrage par `owner=request.user`)
-- Les tokens de partage sont des **UUID v4** (128 bits d'entropie), non devinables
+### Résultat (Mai 2026)
 
-## Sécurisation des fichiers
+```
+found 0 vulnerabilities
+```
 
-- Les fichiers sont stockés dans `MEDIA_ROOT` avec un chemin `uploads/<user_id>/<uuid>_<filename>`
-- En production : le serveur web (nginx) devrait servir les fichiers statiques, pas Django
-- Limite de taille : **50 Mo** par fichier (validée côté serveur et côté client)
-- Expiration automatique : les liens expirent après 24h par défaut (configurable)
+**Aucune vulnérabilité détectée** dans les dépendances de production NestJS.
 
-## Mots de passe
+### Analyse
 
-- Hachage via **PBKDF2 + SHA-256** (défaut Django)
-- Validateurs actifs : longueur minimale, mots courants, similarité avec le nom d'utilisateur, numérique seul
+| Dépendance | Version | Statut |
+|-----------|---------|--------|
+| @nestjs/core | 11.x | ✅ Aucune CVE connue |
+| @nestjs/jwt | 11.x | ✅ Aucune CVE connue |
+| passport-jwt | 4.x | ✅ Aucune CVE connue |
+| bcrypt | 6.x | ✅ Aucune CVE connue |
+| typeorm | 0.3.x | ✅ Aucune CVE connue |
+| pg (PostgreSQL driver) | 8.x | ✅ Aucune CVE connue |
+| class-validator | 0.15.x | ✅ Aucune CVE connue |
+| multer | 2.x | ✅ Aucune CVE connue |
+
+---
+
+## Authentification JWT
+
+**Décisions prises :**
+
+- Tokens signés HMAC-SHA256 avec clé secrète en variable d'environnement (jamais en dur dans le code)
+- Durée de vie : **7 jours** — adapté à un prototype pour le confort utilisateur
+- Stockage côté client : `localStorage` — acceptable pour un MVP, à remplacer par cookies `httpOnly` en production
+- Validation à chaque requête via `passport-jwt` + `JwtAuthGuard`
+- Le payload JWT contient uniquement `{ sub: userId, email }` — données minimales
+
+**Risque identifié :** `localStorage` est accessible par JavaScript (vulnérable aux XSS). En production, utiliser des cookies `httpOnly; Secure; SameSite=Strict`.
+
+---
+
+## Hashage des mots de passe
+
+- Bibliothèque : **bcrypt** avec coût **12**
+- Les mots de passe utilisateurs et les mots de passe de fichiers sont hashés de la même façon
+- Aucun mot de passe n'est jamais retourné dans les réponses API
+- En cas de mauvais identifiants, le message d'erreur est identique qu'il s'agisse de l'email ou du mot de passe — évite l'énumération des comptes
+
+---
+
+## Contrôle d'accès
+
+**Isolation stricte des données :**
+- `GET /api/files` filtre par `ownerId = req.user.id` — un utilisateur ne voit jamais les fichiers d'un autre
+- `DELETE /api/files/:id` cherche `{ id, ownerId }` — retourne 404 (pas 403) si l'id ne correspond pas au propriétaire, pour ne pas révéler l'existence du fichier
+
+**Tokens de partage :**
+- UUID v4 (128 bits d'entropie) — probabilité de collision ou de devinette négligeable
+- Liens publics accessibles sans authentification — intentionnel (partage avec des destinataires sans compte)
+
+---
+
+## Validation des entrées
+
+- **`class-validator`** sur tous les DTOs : `@IsEmail`, `@MinLength`, `@IsInt`, `@Max`
+- **`ValidationPipe` global** avec `whitelist: true` — les champs non déclarés sont ignorés silencieusement
+- Vérifications serveur (en plus du client) :
+  - Taille max fichier : 1 Go
+  - Extensions interdites : `.exe`, `.bat`, `.cmd`, `.sh`, `.ps1`, `.msi`, `.com`
+  - Durée expiration : 1 à 168 heures
+  - Mot de passe fichier : minimum 6 caractères
+
+---
 
 ## CORS
 
-- Origines autorisées configurées explicitement (pas de wildcard `*`)
-- En développement : `http://localhost:5173` uniquement
+- Origines autorisées : liste blanche explicite (`FRONTEND_URL` env var)
+- Aucun wildcard `*`
+- `credentials: true` pour les headers d'autorisation
 
-## En-têtes de sécurité
+---
 
-Django active par défaut :
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- Protection CSRF (pas applicable pour une API JWT pure)
+## Sécurité des fichiers stockés
 
-## Scan de sécurité des dépendances
+- Chemin : `uploads/<userId>/<uuid>_<originalName>` — non devinable, non accessible directement par URL
+- Fichiers temporaires Multer dans `/tmp/` — déplacés ou supprimés immédiatement après traitement
+- Streaming : `fs.createReadStream().pipe(res)` — le fichier n'est jamais chargé entièrement en mémoire (important pour les gros fichiers)
 
-Outil utilisé : **pip-audit**
+---
 
-```bash
-venv/bin/pip-audit
-```
+## Améliorations pour la production
 
-### Résultats (2026-04-24)
-
-| Package | Version | CVE | Correction | Décision |
-|---|---|---|---|---|
-| pip | 21.3.1 | PYSEC-2023-228, CVE-2025-8869, CVE-2026-1703 | 26.0 | Accepté — pip est un outil de build, non exposé en prod |
-| setuptools | 59.6.0 | PYSEC-2022-43012, PYSEC-2025-49, CVE-2024-6345 | 78.1.1 | Accepté — outil de build uniquement, non exposé |
-
-**Aucune vulnérabilité dans les dépendances applicatives** (Django, DRF, simplejwt, psycopg2, Pillow, corsheaders).
-
-Les vulnérabilités détectées concernent uniquement `pip` et `setuptools` du système hôte, qui ne sont pas présents dans l'image Docker de production.
-
-### Vérification dans le container
-
-```bash
-docker compose exec backend pip-audit
-```
-
-## Points d'amélioration pour la production
-
-- [ ] Passer les tokens en `httpOnly cookies` pour éviter le vol par XSS
-- [ ] Activer HTTPS (certificat TLS via Let's Encrypt)
-- [ ] Rate limiting sur les endpoints d'authentification (ex. `django-ratelimit`)
-- [ ] Configurer `SECURE_HSTS_SECONDS`, `SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`
-- [ ] Stocker les fichiers sur S3 ou équivalent (pas le disque local)
-- [ ] Scanner les fichiers uploadés avec un antivirus (ex. ClamAV)
+| Amélioration | Priorité | Raison |
+|-------------|---------|--------|
+| Cookies `httpOnly` à la place de localStorage | Haute | Protection XSS |
+| HTTPS (TLS/Let's Encrypt) | Haute | Chiffrement en transit |
+| Rate limiting sur `/api/auth/*` | Haute | Protection brute-force |
+| Scan antivirus des fichiers uploadés (ClamAV) | Moyenne | Malware upload |
+| Migration vers AWS S3 | Moyenne | Fichiers non exposés via disque local |
+| Rotation JWT + refresh token court | Basse | Révocation des sessions |

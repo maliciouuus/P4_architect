@@ -5,92 +5,88 @@
 ### Fréquence recommandée
 
 | Type de mise à jour | Fréquence | Risque |
-|---|---|---|
-| Correctifs de sécurité | Immédiatement après publication | Faible si testé |
-| Mises à jour mineures | Mensuelle | Faible |
-| Mises à jour majeures | Trimestrielle après évaluation | Moyen à élevé |
+|--------------------|-----------|--------|
+| Correctifs de sécurité (patch) | Immédiat après publication | Faible — corrections ciblées |
+| Mises à jour mineures (minor) | Mensuelle | Faible — compatibilité garantie par semver |
+| Mises à jour majeures (major) | Trimestrielle après évaluation | Élevé — peut casser l'API |
 
-### Procédure backend (Python)
+### Procédure backend (NestJS)
 
 ```bash
-cd backend
+cd backend-nest
 
 # 1. Vérifier les vulnérabilités
-venv/bin/pip-audit
+npm audit
 
-# 2. Voir les mises à jour disponibles
-venv/bin/pip list --outdated
+# 2. Voir les packages obsolètes
+npm outdated
 
-# 3. Mettre à jour une dépendance
-venv/bin/pip install --upgrade django
+# 3. Mettre à jour les mises à jour mineures/patch
+npm update
 
-# 4. Figer les versions
-venv/bin/pip freeze > requirements.txt
+# 4. Mettre à jour un package majeur (ex: NestJS)
+npm install @nestjs/core@latest @nestjs/common@latest
 
-# 5. Lancer les tests
-venv/bin/pytest
+# 5. Relancer les tests pour détecter les régressions
+npm test
 
-# 6. Rebuilder l'image Docker
+# 6. Reconstruire l'image Docker
 docker compose build backend
+docker compose up -d backend
 ```
 
-### Procédure frontend (Node.js)
+### Procédure frontend (Vue.js)
 
 ```bash
 cd frontend
 
-# 1. Voir les mises à jour disponibles
+# 1. Voir les packages obsolètes
 npm outdated
 
-# 2. Mettre à jour (mineures et patches)
+# 2. Mettre à jour les mises à jour mineures/patch
 npm update
 
-# 3. Mettre à jour une dépendance majeure
-npm install vue@latest
+# 3. Mettre à jour Vue ou Vite (major)
+npm install vue@latest vite@latest
 
-# 4. Vérifier
+# 4. Vérifier que le build fonctionne
 npm run build
+
+# 5. Tester manuellement les flows critiques (login, upload, download)
+npm run dev
 ```
 
 ---
 
-## Migrations de base de données
+## Gestion de la base de données
+
+### Migrations TypeORM
+
+En développement, `synchronize: true` dans `app.module.ts` met à jour le schéma automatiquement. **En production**, désactiver et utiliser des migrations explicites :
 
 ```bash
-# Créer une migration après modification d'un modèle
-docker compose exec backend python manage.py makemigrations
+# Générer une migration
+npx typeorm migration:generate -d src/data-source.ts src/migrations/NomMigration
 
 # Appliquer les migrations
-docker compose exec backend python manage.py migrate
+npx typeorm migration:run -d src/data-source.ts
 
-# Voir l'état des migrations
-docker compose exec backend python manage.py showmigrations
+# Annuler la dernière migration
+npx typeorm migration:revert -d src/data-source.ts
 ```
 
-⚠ Toujours tester les migrations sur une copie de la base avant de les appliquer en production.
-
----
-
-## Sauvegardes
-
-### Base de données
+### Sauvegardes
 
 ```bash
-# Export
+# Sauvegarde de la base de données
 docker compose exec db pg_dump -U datashare datashare > backup_$(date +%Y%m%d).sql
 
 # Restauration
-cat backup_20260424.sql | docker compose exec -T db psql -U datashare datashare
-```
+cat backup_20260505.sql | docker compose exec -T db psql -U datashare datashare
 
-### Fichiers uploadés
-
-```bash
-# Sauvegarder le volume media
-docker run --rm \
-  -v p4_architect_media_data:/data \
-  -v $(pwd)/backups:/backup \
-  alpine tar czf /backup/media_$(date +%Y%m%d).tar.gz /data
+# Sauvegarde des fichiers uploadés (volume Docker)
+docker run --rm -v p4_architect_uploads_data:/data -v $(pwd):/backup \
+  alpine tar czf /backup/uploads_$(date +%Y%m%d).tar.gz /data
 ```
 
 ---
@@ -98,29 +94,31 @@ docker run --rm \
 ## Surveillance et logs
 
 ```bash
-# Voir les logs en temps réel
+# Logs en temps réel
 docker compose logs -f backend
 
-# Logs des dernières 100 lignes
+# Dernières 100 lignes
 docker compose logs --tail=100 backend
 
 # État des services
 docker compose ps
+
+# Utilisation disque des volumes
+docker system df -v
 ```
 
----
+### Purge des fichiers expirés (US10)
 
-## Redémarrage des services
+La purge est automatique — le `FilesCron` s'exécute toutes les 24h après le démarrage du serveur. Elle est loggée dans la console NestJS :
 
+```
+[FilesCron] Purge des fichiers expirés : 3 fichier(s) supprimé(s)
+```
+
+Pour déclencher manuellement via l'API (debug) :
 ```bash
-# Redémarrer un service spécifique
-docker compose restart backend
-
-# Redémarrer tous les services
-docker compose restart
-
-# Arrêt complet et redémarrage
-docker compose down && docker compose up -d
+# Appel interne possible si un endpoint admin est ajouté en production
+curl -X POST http://localhost:8000/api/admin/purge -H "Authorization: Bearer <ADMIN_TOKEN>"
 ```
 
 ---
@@ -128,25 +126,23 @@ docker compose down && docker compose up -d
 ## Risques identifiés
 
 | Risque | Probabilité | Impact | Mitigation |
-|---|---|---|---|
-| Rupture d'API Django 6.x | Moyen | Élevé | Tester sur branche dédiée avant maj majeure |
-| Incompatibilité Vue 4 | Faible | Moyen | Rester sur Vue 3 LTS jusqu'à stabilisation |
-| Saturation disque (fichiers) | Moyen | Élevé | Tâche cron de nettoyage des fichiers expirés |
-| Fuite de token JWT | Faible | Élevé | Passer en httpOnly cookie en production |
+|--------|------------|--------|------------|
+| NestJS 12 — breaking changes | Moyen | Haut | Tester sur branche dédiée avant mise à jour |
+| Vue 4 — changements API | Faible | Moyen | Rester sur Vue 3 LTS jusqu'à stabilisation |
+| Saturation disque (fichiers) | Moyen | Haut | Cron de purge actif + monitoring espace disque |
+| JWT_SECRET exposé | Faible | Critique | Rotation du secret + variables d'env sécurisées |
+| PostgreSQL major upgrade (17) | Faible | Moyen | Tester la compatibilité TypeORM avant migration |
+| Vulnérabilité bcrypt | Très faible | Critique | `npm audit` hebdomadaire, alerte GitHub Dependabot |
 
 ---
 
-## Nettoyage des fichiers expirés
+## Checklist avant mise en production
 
-Les fichiers expirés restent en base et sur disque jusqu'à suppression manuelle. Ajouter une commande de gestion Django pour automatiser le nettoyage :
-
-```bash
-# À créer : backend/files/management/commands/cleanup_expired.py
-docker compose exec backend python manage.py cleanup_expired
-```
-
-En production, planifier via cron :
-
-```cron
-0 2 * * * docker compose exec -T backend python manage.py cleanup_expired
-```
+- [ ] Changer `JWT_SECRET` (clé longue et aléatoire)
+- [ ] Passer `synchronize: false` dans TypeORM, activer les migrations
+- [ ] Configurer un reverse proxy Nginx avec HTTPS
+- [ ] Remplacer `localStorage` par cookies `httpOnly`
+- [ ] Activer le rate limiting sur `/api/auth/*`
+- [ ] Configurer les sauvegardes automatiques (cron pg_dump)
+- [ ] Mettre en place Dependabot ou Renovate pour les alertes de sécurité
+- [ ] Migrer le stockage vers S3 pour la scalabilité
