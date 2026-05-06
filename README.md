@@ -6,44 +6,54 @@ Prototype MVP réalisé dans le cadre de la mission **« Pilotez le développeme
 
 ## Présentation
 
-**DataShare** permet aux freelances et petites entreprises d'envoyer des fichiers simplement et de générer des **liens de téléchargement à durée limitée**, sans dépendance à des services tiers.
+DataShare permet à des utilisateurs, anonymes ou enregistrés, de transférer des fichiers via des **liens de téléchargement temporaires**, avec options de protection et de gestion pour les utilisateurs connectés.
 
-### Fonctionnalités MVP
+**Cible :** freelances et petites entreprises souhaitant partager des fichiers sans dépendre de services tiers.
 
-- Création de compte et connexion (JWT)
-- Upload de fichiers (max 50 Mo)
-- Génération d'un lien de téléchargement unique avec expiration configurable
-- Historique des fichiers envoyés
-- Suppression manuelle d'un fichier
-- Page de téléchargement publique avec affichage de l'état du lien (valide / expiré)
+---
+
+## Fonctionnalités MVP
+
+| US | Fonctionnalité | Statut |
+|----|---------------|--------|
+| US01 | Upload avec compte | ✅ |
+| US02 | Téléchargement via lien unique | ✅ |
+| US03 | Création de compte | ✅ |
+| US04 | Connexion JWT | ✅ |
+| US05 | Historique des fichiers | ✅ |
+| US06 | Suppression de fichier | ✅ |
+| US07 | Upload anonyme | ✅ |
+| US09 | Protection par mot de passe | ✅ |
+| US10 | Expiration automatique (cron) | ✅ |
 
 ---
 
 ## Stack technique
 
 | Composant | Technologie |
-|---|---|
-| Back-end | Django 5.2 + Django REST Framework |
-| Authentification | JWT (djangorestframework-simplejwt) |
-| Front-end | Vue.js 3 + Vite + Pinia |
+|-----------|-------------|
+| Backend | NestJS 11 (TypeScript) |
+| Frontend | Vue.js 3 + Pinia + Vite |
 | Base de données | PostgreSQL 16 |
-| Stockage fichiers | Disque local (`/media/`) |
-| Containerisation | Docker + Docker Compose |
+| Authentification | JWT (7 jours) |
+| Stockage | Système de fichiers local |
+| Tests | Jest (32 tests unitaires, 78% couverture) + Playwright E2E |
+| Déploiement | Docker + Docker Compose |
 
 ---
 
 ## Prérequis
 
-- [Docker](https://docs.docker.com/get-docker/) ≥ 24
-- [Docker Compose](https://docs.docker.com/compose/) ≥ 2.18
+- **Docker** ≥ 24 et **Docker Compose** ≥ 2.20
+- **Node.js** ≥ 20 (développement local uniquement)
 
 ---
 
-## Installation et lancement
+## Installation rapide (Docker)
 
 ```bash
-# 1. Cloner le dépôt
-git clone <url-du-repo>
+# 1. Cloner le repository
+git clone https://github.com/maliciouuus/P4_architect.git
 cd P4_architect
 
 # 2. Lancer tous les services
@@ -53,36 +63,63 @@ docker compose up -d
 docker compose ps
 ```
 
-L'application est disponible sur :
-- **Frontend** : http://localhost:5173
-- **API** : http://localhost:8000/api/
-- **Admin Django** : http://localhost:8000/admin/
-
-Les migrations sont appliquées automatiquement au démarrage.
+**Accès :**
+- Frontend : http://localhost:5173
+- API : http://localhost:8000/api
 
 ---
 
-## Variables d'environnement
+## Installation en développement local
 
-Le fichier `docker-compose.yml` contient des valeurs par défaut pour le développement. En production, surcharger via un fichier `.env` :
-
-| Variable | Description | Défaut |
-|---|---|---|
-| `DJANGO_SECRET_KEY` | Clé secrète Django | `dev-secret-key-change-in-production` |
-| `DEBUG` | Mode debug | `True` |
-| `DB_NAME` | Nom de la base | `datashare` |
-| `DB_USER` | Utilisateur BDD | `datashare` |
-| `DB_PASSWORD` | Mot de passe BDD | `datashare` |
-| `DB_HOST` | Hôte BDD | `db` |
-| `CORS_ALLOWED_ORIGINS` | Origines autorisées | `http://localhost:5173` |
-| `SHARE_LINK_EXPIRY_HOURS` | Durée de validité des liens (heures) | `24` |
-
----
-
-## Créer un compte administrateur
+### Base de données
 
 ```bash
-docker compose exec backend python manage.py createsuperuser
+docker compose up -d db
+```
+
+### Backend NestJS
+
+```bash
+cd backend-nest
+npm install
+npm run start:dev          # Hot-reload sur http://localhost:8000
+```
+
+### Frontend Vue.js
+
+```bash
+cd frontend
+npm install
+npm run dev                # http://localhost:5173
+```
+
+---
+
+## Variables d'environnement (`backend-nest/.env`)
+
+| Variable | Valeur par défaut | Description |
+|----------|------------------|-------------|
+| `DATABASE_URL` | `postgresql://datashare:datashare@localhost:5433/datashare` | Connexion PostgreSQL |
+| `JWT_SECRET` | `change_me_in_production` | Clé de signature JWT — **à changer en production** |
+| `MAX_FILE_SIZE` | `1073741824` | Taille max en octets (1 Go) |
+| `SHARE_LINK_EXPIRY_HOURS` | `168` | Durée de validité du lien (7 jours) |
+| `UPLOAD_DIR` | `uploads` | Dossier de stockage |
+| `PORT` | `8000` | Port NestJS |
+| `FRONTEND_URL` | `http://localhost:5173` | URL frontend (CORS + liens de partage) |
+
+---
+
+## Tests
+
+```bash
+cd backend-nest
+npm test            # 32 tests unitaires
+npm run test:cov    # Rapport de couverture (78% global)
+
+# Tests E2E (nécessite docker compose up -d)
+cd ../e2e
+source venv/bin/activate
+pytest -v           # 11 scénarios Playwright
 ```
 
 ---
@@ -91,71 +128,40 @@ docker compose exec backend python manage.py createsuperuser
 
 ```
 P4_architect/
-├── backend/                  # Django + DRF
-│   ├── accounts/             # App authentification
-│   ├── files/                # App gestion fichiers
-│   ├── datashare/            # Settings, URLs
-│   ├── requirements.txt
+├── backend-nest/          # API NestJS (TypeScript)
+│   ├── src/auth/          # Authentification (JWT, bcrypt)
+│   ├── src/files/         # Fichiers (upload, download, cron purge)
 │   └── Dockerfile
-├── frontend/                 # Vue.js 3
-│   ├── src/
-│   │   ├── views/            # Pages (Home, Login, Register, Dashboard, Download)
-│   │   ├── stores/           # Pinia (auth, files)
-│   │   ├── api/              # Client Axios
-│   │   └── router/           # Vue Router
+├── frontend/              # Vue.js 3 + Pinia
+│   ├── src/stores/        # État global (auth, files)
+│   ├── src/views/         # Pages (Dashboard, Download, Login, Register)
 │   └── Dockerfile
-├── docs/                     # Documentation
-├── docker-compose.yml
-└── README.md
+├── docs/                  # Documentation technique PDF + présentation
+├── scripts/               # setup_db.sql, génération docs
+├── TESTING.md / SECURITY.md / PERF.md / MAINTENANCE.md
+└── docker-compose.yml
 ```
-
----
-
-## Lancer les tests
-
-```bash
-cd backend
-venv/bin/pytest
-```
-
-Rapport de couverture HTML généré dans `backend/htmlcov/index.html`.
-
-Résultats actuels : **30 tests, 99% de couverture**.
 
 ---
 
 ## API — Endpoints principaux
 
-| Méthode | Endpoint | Description | Auth |
-|---|---|---|---|
-| POST | `/api/auth/register/` | Créer un compte | Non |
-| POST | `/api/auth/login/` | Connexion (JWT) | Non |
-| POST | `/api/auth/token/refresh/` | Rafraîchir le token | Non |
-| GET | `/api/auth/me/` | Profil utilisateur | Oui |
-| GET | `/api/files/` | Liste de mes fichiers | Oui |
-| POST | `/api/files/upload/` | Uploader un fichier | Oui |
-| DELETE | `/api/files/<id>/delete/` | Supprimer un fichier | Oui |
-| GET | `/api/files/share/<token>/` | Infos publiques du fichier | Non |
-| GET | `/api/files/download/<token>/` | Télécharger un fichier | Non |
-
-La spec OpenAPI complète est disponible dans [`docs/openapi.yaml`](docs/openapi.yaml).
+| Méthode | Route | Auth | Description |
+|---------|-------|------|-------------|
+| POST | `/api/auth/register` | ❌ | Créer un compte |
+| POST | `/api/auth/login` | ❌ | Se connecter (JWT) |
+| GET | `/api/auth/me` | ✅ | Profil utilisateur |
+| GET | `/api/files` | ✅ | Historique des fichiers |
+| POST | `/api/files/upload` | ✅ | Upload fichier |
+| POST | `/api/files/upload/anonymous` | ❌ | Upload anonyme |
+| DELETE | `/api/files/:id` | ✅ | Supprimer un fichier |
+| GET | `/api/files/share/:token` | ❌ | Infos publiques |
+| GET | `/api/files/download/:token` | ❌ | Télécharger |
 
 ---
 
-## Qualité et maintenance
+## Documentation
 
-| Fichier | Contenu |
-|---|---|
-| [`TESTING.md`](TESTING.md) | Plan de tests, résultats, coverage |
-| [`SECURITY.md`](SECURITY.md) | Scan de sécurité, décisions |
-| [`PERF.md`](PERF.md) | Tests de performance, métriques |
-| [`MAINTENANCE.md`](MAINTENANCE.md) | Procédures de mise à jour |
-
----
-
-## Arrêter les services
-
-```bash
-docker compose down          # Arrêter sans supprimer les données
-docker compose down -v       # Arrêter et supprimer les volumes (⚠ supprime les fichiers)
-```
+- [Documentation technique (PDF)](docs/documentation_technique_v2.pdf)
+- [Présentation investisseurs (PPTX)](docs/presentation_datashare_v2.pptx)
+- [TESTING.md](TESTING.md) · [SECURITY.md](SECURITY.md) · [PERF.md](PERF.md) · [MAINTENANCE.md](MAINTENANCE.md)
