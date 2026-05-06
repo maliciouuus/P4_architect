@@ -1,19 +1,23 @@
 /**
- * Client HTTP centralisé pour toutes les requêtes vers l'API Django.
+ * Client HTTP centralisé pour toutes les requêtes vers l'API NestJS.
  *
- * On utilise Axios avec deux intercepteurs :
+ * Utilise Axios avec deux intercepteurs :
  * - Requête : injecte le token JWT dans chaque appel si disponible
- * - Réponse : tente un refresh automatique si le token est expiré (401)
+ * - Réponse : redirige vers /login si le token est invalide ou expiré (401)
+ *
+ * NestJS émet des tokens JWT avec une durée de 7 jours (pas de refresh token).
+ * Si un 401 est reçu, le token a expiré — on déconnecte proprement.
  */
 
 import axios from 'axios'
 
-// L'URL de base pointe vers le proxy Vite qui redirige vers Django :8000
+// L'URL de base pointe vers le proxy Vite configuré dans vite.config.js
+// qui redirige les appels /api/* vers NestJS sur :8000
 const api = axios.create({
   baseURL: '/api',
 })
 
-// Intercepteur de requête — ajoute le header Authorization si on a un token
+// Intercepteur de requête — injecte le token JWT dans l'en-tête Authorization
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('access_token')
   if (token) {
@@ -22,38 +26,18 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// Intercepteur de réponse — gère le renouvellement automatique du token expiré
+// Intercepteur de réponse — déconnecte l'utilisateur si le token est invalide
 api.interceptors.response.use(
-  // Si la réponse est OK, on la passe sans modification
   (response) => response,
-
-  async (error) => {
-    const originalRequest = error.config
-
-    // On tente un refresh uniquement sur une erreur 401 et si on n'a pas déjà réessayé
-    // (le flag _retry évite une boucle infinie si le refresh échoue aussi)
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      const refresh = localStorage.getItem('refresh_token')
-
-      if (refresh) {
-        try {
-          // On appelle directement axios pour éviter que l'intercepteur
-          // ne s'applique à nouveau sur cette requête de refresh
-          const { data } = await axios.post('/api/auth/token/refresh/', { refresh })
-          localStorage.setItem('access_token', data.access)
-          originalRequest.headers.Authorization = `Bearer ${data.access}`
-          // On relance la requête originale avec le nouveau token
-          return api(originalRequest)
-        } catch {
-          // Le refresh a échoué (token révoqué ou expiré) — on déconnecte
-          localStorage.removeItem('access_token')
-          localStorage.removeItem('refresh_token')
-          window.location.href = '/login'
-        }
+  (error) => {
+    // Si NestJS répond 401, le token est expiré ou absent — on nettoie et redirige
+    if (error.response?.status === 401) {
+      localStorage.removeItem('access_token')
+      // Redirige seulement si on n'est pas déjà sur la page de login
+      if (!window.location.pathname.startsWith('/login')) {
+        window.location.href = '/login'
       }
     }
-
     return Promise.reject(error)
   },
 )

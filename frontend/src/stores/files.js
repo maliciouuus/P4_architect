@@ -29,7 +29,8 @@ export const useFilesStore = defineStore('files', () => {
     loading.value = true
     error.value = null
     try {
-      const { data } = await api.get('/files/')
+      // NestJS : GET /api/files — sans trailing slash
+      const { data } = await api.get('/files')
       files.value = data
     } catch {
       error.value = 'Impossible de charger les fichiers.'
@@ -54,7 +55,7 @@ export const useFilesStore = defineStore('files', () => {
     if (password) form.append('password', password)
     form.append('expiry_hours', expiryHours)
 
-    const { data } = await api.post('/files/upload/', form, {
+    const { data } = await api.post('/files/upload', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (e) => {
         // On calcule le pourcentage et on appelle le callback si fourni
@@ -72,7 +73,8 @@ export const useFilesStore = defineStore('files', () => {
    * La liste locale est mise à jour immédiatement sans attendre un rechargement.
    */
   async function deleteFile(id) {
-    await api.delete(`/files/${id}/delete/`)
+    // NestJS : DELETE /api/files/:id — plus de suffixe /delete/ comme Django
+    await api.delete(`/files/${id}`)
     files.value = files.value.filter((f) => f.id !== id)
   }
 

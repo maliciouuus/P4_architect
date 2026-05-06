@@ -18,24 +18,27 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => !!user.value)
 
   /**
-   * Connecte un utilisateur avec son nom d'utilisateur et mot de passe.
-   * Stocke les tokens JWT dans localStorage et charge le profil.
+   * Connecte un utilisateur avec son email et mot de passe.
+   * NestJS retourne { access_token, user } — pas de refresh token (JWT 7 jours).
+   * Le token est stocké dans localStorage et le profil chargé immédiatement.
    */
-  async function login(username, password) {
-    const { data } = await api.post('/auth/login/', { username, password })
-    localStorage.setItem('access_token', data.access)
-    localStorage.setItem('refresh_token', data.refresh)
-    // On charge le profil immédiatement pour renseigner `user`
+  async function login(email, password) {
+    // NestJS attend { email, password } — sans trailing slash contrairement à Django
+    const { data } = await api.post('/auth/login', { email, password })
+    // NestJS retourne access_token (pas access/refresh comme Django SimpleJWT)
+    localStorage.setItem('access_token', data.access_token)
     await fetchMe()
   }
 
   /**
    * Inscrit un nouvel utilisateur puis le connecte automatiquement.
-   * Le login après inscription évite de redemander les identifiants.
+   * password2 est ignoré par NestJS (whitelist: true dans ValidationPipe)
+   * mais on le garde pour ne pas modifier la vue RegisterView.
    */
   async function register(username, email, password, password2) {
-    await api.post('/auth/register/', { username, email, password, password2 })
-    await login(username, password)
+    await api.post('/auth/register', { username, email, password })
+    // On connecte avec l'email — NestJS utilise l'email comme identifiant de connexion
+    await login(email, password)
   }
 
   /**
@@ -45,21 +48,19 @@ export const useAuthStore = defineStore('auth', () => {
    */
   async function fetchMe() {
     try {
-      const { data } = await api.get('/auth/me/')
+      const { data } = await api.get('/auth/me')
       user.value = data
     } catch {
-      // Si le token est invalide ou expiré, on repart de zéro
       user.value = null
     }
   }
 
   /**
    * Déconnecte l'utilisateur côté client.
-   * On supprime les tokens et on vide l'état — le router redirige vers /login.
+   * NestJS est stateless (JWT) — il suffit de supprimer le token local.
    */
   function logout() {
     localStorage.removeItem('access_token')
-    localStorage.removeItem('refresh_token')
     user.value = null
   }
 
