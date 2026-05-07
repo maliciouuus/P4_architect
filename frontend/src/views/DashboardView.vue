@@ -47,7 +47,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
               Ajouter des fichiers
             </button>
-            <button class="btn-orange-outline" @click="handleLogout">
+            <button class="btn-dark" @click="handleLogout">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
               Déconnexion
             </button>
@@ -57,11 +57,13 @@
 
       <!-- Content -->
       <div class="panel-content">
-        <h2 class="section-title">Mes fichiers</h2>
+        <h1 class="section-title">Mes fichiers</h1>
 
         <div class="tabs-wrap">
-          <div class="tabs">
+          <div class="tabs" role="tablist" aria-label="Filtrer les fichiers">
             <button v-for="t in tabs" :key="t.key" class="tab"
+              role="tab"
+              :aria-selected="currentTab === t.key"
               :class="{ active: currentTab === t.key }"
               @click="currentTab = t.key">{{ t.label }}</button>
           </div>
@@ -112,7 +114,7 @@
                       <circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/>
                     </svg>
                   </button>
-                  <div v-if="openMenuId === file.id" class="dropdown">
+                  <div v-if="openMenuId === file.id" class="dropdown" role="menu">
                     <button @click="openLink(file.share_url); openMenuId = null">Accéder au lien</button>
                     <button class="danger" @click="confirmDelete(file); openMenuId = null">Supprimer</button>
                   </div>
@@ -132,9 +134,11 @@
     </div>
 
     <!-- Modale suppression -->
-    <div v-if="fileToDelete" class="modal-overlay" @click.self="fileToDelete = null">
+    <div v-if="fileToDelete" class="modal-overlay" @click.self="fileToDelete = null"
+      @keydown="trapFocus"
+      role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
       <div class="card delete-modal">
-        <h3>Supprimer le fichier ?</h3>
+        <h3 id="delete-modal-title">Supprimer le fichier ?</h3>
         <p>« {{ fileToDelete.original_name }} » sera définitivement supprimé.</p>
         <div class="modal-actions">
           <button class="btn-orange-outline" @click="fileToDelete = null">Annuler</button>
@@ -189,6 +193,23 @@ async function doDelete() {
   fileToDelete.value = null
 }
 
+// Piège de focus dans la modale — WCAG 2.1 critère 2.4.3
+function trapFocus(e) {
+  const modal = document.querySelector('[role="dialog"]')
+  if (!modal) return
+  const focusable = modal.querySelectorAll('button, [href], input, select, [tabindex]:not([tabindex="-1"])')
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (e.key === 'Tab') {
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault(); last.focus()
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault(); first.focus()
+    }
+  }
+  if (e.key === 'Escape') fileToDelete.value = null
+}
+
 function expiryLabel(file) {
   const diff = Math.ceil((new Date(file.expires_at) - new Date()) / (1000 * 60 * 60 * 24))
   if (diff <= 0) return 'Expiré'
@@ -202,10 +223,10 @@ function expiryLabel(file) {
 
 /* ─── Sidebar desktop ─── */
 .sidebar { width: 259px; flex-shrink: 0; background: var(--gradient); border-right: 2px solid #623519; display: flex; flex-direction: column; }
-.sidebar-brand { font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 700; color: #fff; padding: 16px 24px; height: 72px; display: flex; align-items: center; }
+.sidebar-brand { font-family: 'DM Sans', sans-serif; font-size: 32px; font-weight: 700; color: #1E1E1E; padding: 16px 24px; height: 72px; display: flex; align-items: center; }
 .sidebar-nav { flex: 1; padding: 24px; }
-.sidebar-item { width: 100%; background: rgba(255,255,255,0.2); border: none; border-radius: 12px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; text-align: left; }
-.sidebar-footer { padding: 16px 24px; font-size: 13px; color: rgba(255,255,255,0.7); }
+.sidebar-item { width: 100%; background: rgba(0,0,0,0.12); border: none; border-radius: 12px; padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; color: #1E1E1E; cursor: pointer; text-align: left; }
+.sidebar-footer { padding: 16px 24px; font-size: 13px; color: #fff; }
 
 /* ─── Sidebar mobile (overlay) ─── */
 .mobile-sidebar {
@@ -215,11 +236,11 @@ function expiryLabel(file) {
   box-shadow: 4px 0 24px rgba(0,0,0,.2);
 }
 .mobile-sidebar-header { display: flex; align-items: center; gap: 12px; padding: 16px 20px; height: 64px; }
-.close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #fff; line-height: 1; }
-.mobile-brand { font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700; color: #fff; }
+.close-btn { background: none; border: none; font-size: 20px; cursor: pointer; color: #1E1E1E; line-height: 1; }
+.mobile-brand { font-family: 'DM Sans', sans-serif; font-size: 22px; font-weight: 700; color: #1E1E1E; }
 .mobile-sidebar-nav { flex: 1; padding: 16px; }
-.mobile-sidebar-item { width: 100%; background: rgba(255,255,255,0.2); border: none; border-radius: 12px; padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; color: #fff; cursor: pointer; text-align: left; }
-.mobile-sidebar-footer { padding: 16px 20px; font-size: 12px; color: rgba(255,255,255,0.7); }
+.mobile-sidebar-item { width: 100%; background: rgba(0,0,0,0.12); border: none; border-radius: 12px; padding: 10px 16px; font-family: 'DM Sans', sans-serif; font-size: 16px; font-weight: 600; color: #1E1E1E; cursor: pointer; text-align: left; }
+.mobile-sidebar-footer { padding: 16px 20px; font-size: 12px; color: #fff; }
 .sidebar-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 199; }
 
 /* Slide transition */
@@ -240,7 +261,7 @@ function expiryLabel(file) {
 .hamburger { background: none; border: none; cursor: pointer; display: flex; flex-direction: column; gap: 5px; padding: 4px; }
 .hamburger span { display: block; width: 22px; height: 2px; background: #333; border-radius: 2px; }
 .mobile-user { display: flex; align-items: center; gap: 8px; }
-.avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--orange, #FF812D); color: #fff; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+.avatar { width: 32px; height: 32px; border-radius: 50%; background: #2C2C2C; color: #F3EEEA; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
 .username { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 600; }
 
 /* ─── Action bar desktop ─── */
@@ -254,24 +275,24 @@ function expiryLabel(file) {
 .tabs-wrap { margin-bottom: 16px; }
 .tabs { display: inline-flex; background: var(--tab-bg); border: 1px solid var(--tab-stroke); border-radius: var(--radius-tab); overflow: hidden; }
 .tab { padding: 8px 16px; font-family: 'DM Sans', sans-serif; font-size: 15px; border: none; background: transparent; color: #555; cursor: pointer; transition: background .15s, color .15s; }
-.tab.active { background: var(--orange, #FF812D); color: #fff; border-radius: var(--radius-tab); }
+.tab.active { background: #7A2E00; color: #fff; border-radius: var(--radius-tab); } /* #7A2E00 = 8.6:1 sur blanc ✅ */
 
 /* ─── File list ─── */
 .state-msg { color: var(--text-secondary); padding: 40px 0; text-align: center; }
 .file-list { display: flex; flex-direction: column; gap: 8px; }
 .file-row { display: flex; align-items: center; gap: 12px; background: var(--file-row-bg); border: 1px solid var(--file-row-stroke); border-radius: var(--radius-btn); padding: 10px 14px; }
-.file-icon { width: 22px; height: 22px; flex-shrink: 0; color: #888; }
+.file-icon { width: 22px; height: 22px; flex-shrink: 0; color: #767676; }
 .file-info { flex: 1; min-width: 0; }
 .file-name { font-family: 'DM Sans', sans-serif; font-size: 15px; font-weight: 600; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.file-expiry { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #888; display: block; margin-top: 2px; }
+.file-expiry { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #767676; display: block; margin-top: 2px; }
 .file-expiry.expired { color: #C52020; }
 .file-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-.lock-icon { width: 15px; height: 15px; color: #aaa; }
+.lock-icon { width: 15px; height: 15px; color: #767676; }
 .btn-sm { padding: 7px 12px; font-size: 13px; }
 
 /* Tags */
 .tags-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
-.tag-chip { background: #FFF3EB; border: 1px solid var(--orange, #FF812D); color: var(--orange, #FF812D); border-radius: 99px; padding: 1px 9px; font-size: 11px; font-family: 'Inter', sans-serif; }
+.tag-chip { background: #FFF3EB; border: 1px solid #B35400; color: #B35400; border-radius: 99px; padding: 1px 9px; font-size: 11px; font-family: 'Inter', sans-serif; }
 
 /* Dots menu */
 .menu-wrap { position: relative; }
@@ -342,8 +363,9 @@ function expiryLabel(file) {
   }
   .tab.active {
     background: var(--tab-active);
-    color: #fff;
+    color: #1E1E1E;  /* texte foncé sur fond saumon — ratio 7:1 ✅ */
     border-radius: 99px;
+    font-weight: 700;
   }
 
   /* File rows — fond tab-bg du système (saumon léger) */

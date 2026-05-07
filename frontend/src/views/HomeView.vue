@@ -12,7 +12,7 @@
 
     <!-- Vue landing -->
     <div v-if="!showUpload" class="hero">
-      <p class="tagline">Tu veux partager un fichier ?</p>
+      <h1 class="tagline">Tu veux partager un fichier ?</h1>
       <button class="icon-btn" @click="handleUploadClick" aria-label="Partager un fichier">
         <div class="icon-ring-outer">
           <div class="icon-ring-inner">
@@ -30,7 +30,7 @@
     <!-- Vue upload anonyme (US07) -->
     <div v-else class="hero">
       <div class="card upload-card">
-        <h2 class="upload-title">Ajouter un fichier</h2>
+        <h1 class="upload-title">Ajouter un fichier</h1>
 
         <!-- Fichier sélectionné -->
         <div v-if="selectedFile" class="selected-file-row">
@@ -46,16 +46,17 @@
           </div>
           <button class="btn-orange-outline btn-sm" @click="fileInput.click()">Changer</button>
         </div>
-        <div v-else class="drop-zone" @click="fileInput.click()"
+        <button type="button" class="drop-zone" @click="fileInput.click()"
           @dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
-          @drop.prevent="onDrop" :class="{dragging}">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B3B3B3" stroke-width="1.5">
+          @drop.prevent="onDrop" :class="{dragging}"
+          aria-label="Sélectionner un fichier à envoyer">
+          <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#767676" stroke-width="1.5">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
             <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
           </svg>
           <p>Glissez un fichier ou <strong>cliquez ici</strong></p>
-        </div>
-        <input ref="fileInput" type="file" hidden @change="onFileChange" />
+        </button>
+        <input ref="fileInput" type="file" hidden aria-label="Sélectionner un fichier" @change="onFileChange" />
 
         <!-- Champs -->
         <div class="upload-fields">
@@ -80,7 +81,7 @@
         </div>
 
         <!-- Erreur -->
-        <div v-if="uploadError" class="alert alert-error">{{ uploadError }}</div>
+        <div v-if="uploadError" role="alert" class="alert alert-error">{{ uploadError }}</div>
 
         <!-- Lien après upload -->
         <template v-if="shareUrl">
@@ -230,14 +231,14 @@ function formatSize(bytes) {
 .upload-card { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; padding: 24px 32px; }
 .upload-title { font-family: 'DM Sans', sans-serif; font-size: 28px; font-weight: 700; text-align: center; }
 
-.drop-zone { border: 2px dashed #D9D9D9; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #888; font-family: 'DM Sans', sans-serif; transition: border-color .2s; }
+.drop-zone { border: 2px dashed #D9D9D9; border-radius: 8px; padding: 24px; text-align: center; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; color: #595959; background: #fff; font-family: 'DM Sans', sans-serif; transition: border-color .2s; }
 .drop-zone.dragging { border-color: var(--orange); }
 
 .selected-file-row { display: flex; align-items: center; justify-content: space-between; padding: 8px; gap: 16px; background: var(--panel-bg, #fafafa); border-radius: 8px; }
 .selected-file-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .file-icon { width: 24px; height: 24px; flex-shrink: 0; color: #555; }
 .sel-name { font-family: 'Inter', sans-serif; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
-.sel-size { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #888; }
+.sel-size { font-family: 'DM Sans', sans-serif; font-size: 13px; color: #767676; }
 
 .upload-fields { display: flex; flex-direction: column; gap: 12px; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
@@ -247,9 +248,9 @@ function formatSize(bytes) {
 
 .success-text { font-family: 'Inter', sans-serif; font-size: 15px; text-align: center; }
 .share-box { background: rgba(255,129,45,.06); border: 1px solid rgba(255,129,45,.4); border-radius: 8px; padding: 10px 16px; cursor: pointer; word-break: break-all; }
-.share-url { font-family: 'Inter', sans-serif; font-size: 14px; color: var(--orange, #FF812D); }
+.share-url { font-family: 'Inter', sans-serif; font-size: 14px; color: #B35400; }
 
-.btn-ghost { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #888; text-decoration: underline; padding: 4px 0; align-self: center; }
+.btn-ghost { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 14px; color: #767676; text-decoration: underline; padding: 4px 0; align-self: center; }
 
 .page-footer { padding: 16px 24px; font-family: 'Inter', sans-serif; font-size: 16px; color: #fff; flex-shrink: 0; }
 </style>

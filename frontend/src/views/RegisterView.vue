@@ -9,7 +9,7 @@
       <div class="card auth-card">
         <h1 class="card-title">Créer un compte</h1>
 
-        <div v-if="error" class="alert alert-error">{{ error }}</div>
+        <div v-if="error" role="alert" class="alert alert-error">{{ error }}</div>
 
         <form @submit.prevent="handleRegister" class="form-stack" novalidate aria-label="Formulaire de création de compte">
           <div class="field">
@@ -27,9 +27,9 @@
             <input id="reg-password2" v-model="password2" type="password" placeholder="Saisissez le à nouveau..."
               required aria-required="true" autocomplete="new-password" />
           </div>
-          <button type="button" class="btn-ghost-orange" @click="$router.push('/login')">
+          <router-link to="/login" class="btn-ghost-orange">
             J'ai déjà un compte
-          </button>
+          </router-link>
           <button class="btn-orange-solid" :disabled="loading">
             {{ loading ? 'Création…' : 'Créer mon compte' }}
           </button>

@@ -49,3 +49,8 @@ docs/slides.pdf
 *.zip
 docs/.~lock.*
 push_progressif.sh
+backend-nest/tmp/
+backend-nest/uploads/
+backend-nest/coverage/
+frontend/dist/
+.claude

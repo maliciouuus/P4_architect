@@ -3,19 +3,20 @@
     "name": "DataShare API",
     "description": "Collection complète des endpoints DataShare MVP — NestJS + JWT",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "variable": [
-    { "key": "base_url", "value": "http://localhost:8000/api", "type": "string" },
-    { "key": "token",    "value": "",                          "type": "string" },
-    { "key": "share_token", "value": "",                       "type": "string" }
+    { "key": "base_url",    "value": "http://localhost:8000/api", "type": "string" },
+    { "key": "token",       "value": "",                          "type": "string" },
+    { "key": "share_token", "value": "",                          "type": "string" },
+    { "key": "file_id",     "value": "",                          "type": "string" }
   ],
   "item": [
     {
       "name": "Auth",
       "item": [
         {
-          "name": "Register — Créer un compte",
+          "name": "1. Register — Créer un compte",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -32,11 +33,11 @@
               "script": {
                 "exec": [
                   "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('Pas de mot de passe dans la réponse', () => {",
+                  "pm.test('Retourne id + email sans mot de passe', () => {",
                   "  const body = pm.response.json();",
-                  "  pm.expect(body).to.not.have.property('password');",
                   "  pm.expect(body).to.have.property('id');",
                   "  pm.expect(body).to.have.property('email');",
+                  "  pm.expect(body).to.not.have.property('password');",
                   "});"
                 ]
               }
@@ -44,7 +45,7 @@
           ]
         },
         {
-          "name": "Login — Connexion",
+          "name": "2. Login — Connexion (stocke le token)",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -61,7 +62,7 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Token JWT présent', () => {",
+                  "pm.test('Token JWT présent et stocké', () => {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body).to.have.property('access_token');",
                   "  pm.collectionVariables.set('token', body.access_token);",
@@ -72,7 +73,7 @@
           ]
         },
         {
-          "name": "Login — Mauvais mot de passe (401)",
+          "name": "3. Login — Mauvais mot de passe → 401",
           "request": {
             "method": "POST",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
@@ -89,7 +90,7 @@
               "script": {
                 "exec": [
                   "pm.test('Status 401 Unauthorized', () => pm.response.to.have.status(401));",
-                  "pm.test('Message générique (pas de révélation email/mdp)', () => {",
+                  "pm.test('Message générique — pas de révélation email/mdp', () => {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body.message).to.equal('Identifiants invalides.');",
                   "});"
@@ -99,7 +100,7 @@
           ]
         },
         {
-          "name": "Me — Profil utilisateur connecté",
+          "name": "4. Me — Profil utilisateur connecté",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
@@ -123,7 +124,7 @@
           ]
         },
         {
-          "name": "Me — Sans token (401)",
+          "name": "5. Me — Sans token → 401",
           "request": {
             "method": "GET",
             "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}}"], "path": ["auth", "me"] }
@@ -146,94 +147,7 @@
       "name": "Fichiers",
       "item": [
         {
-          "name": "Upload — Fichier avec compte (US01)",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/files/upload", "host": ["{{base_url}}"], "path": ["files", "upload"] },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "file",         "type": "file",  "src": "/chemin/vers/fichier.txt" },
-                { "key": "expiry_hours", "type": "text",  "value": "48" },
-                { "key": "password",     "type": "text",  "value": "" }
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('share_url présent', () => {",
-                  "  const body = pm.response.json();",
-                  "  pm.expect(body).to.have.property('share_url');",
-                  "  pm.expect(body.is_expired).to.be.false;",
-                  "  const token = body.share_url.split('/download/')[1];",
-                  "  pm.collectionVariables.set('share_token', token);",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Upload — Fichier .exe refusé (403)",
-          "request": {
-            "method": "POST",
-            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/files/upload", "host": ["{{base_url}}"], "path": ["files", "upload"] },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "file", "type": "file", "src": "/chemin/vers/virus.exe" }
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 403 extension interdite', () => pm.response.to.have.status(403));"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Upload — Anonyme sans compte (US07)",
-          "request": {
-            "method": "POST",
-            "url": { "raw": "{{base_url}}/files/upload/anonymous", "host": ["{{base_url}}"], "path": ["files", "upload", "anonymous"] },
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                { "key": "file", "type": "file", "src": "/chemin/vers/fichier.txt" }
-              ]
-            }
-          },
-          "response": [],
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
-                  "pm.test('share_url présent (ownerId null)', () => {",
-                  "  const body = pm.response.json();",
-                  "  pm.expect(body).to.have.property('share_url');",
-                  "});"
-                ]
-              }
-            }
-          ]
-        },
-        {
-          "name": "Historique — Liste des fichiers (US05)",
+          "name": "6. Liste fichiers — authentifié (US05)",
           "request": {
             "method": "GET",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
@@ -246,9 +160,8 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Tableau de fichiers', () => {",
-                  "  const body = pm.response.json();",
-                  "  pm.expect(body).to.be.an('array');",
+                  "pm.test('Retourne un tableau', () => {",
+                  "  pm.expect(pm.response.json()).to.be.an('array');",
                   "});"
                 ]
               }
@@ -256,7 +169,7 @@
           ]
         },
         {
-          "name": "Historique — Sans token (401)",
+          "name": "7. Liste fichiers — sans token → 401",
           "request": {
             "method": "GET",
             "url": { "raw": "{{base_url}}/files", "host": ["{{base_url}}"], "path": ["files"] }
@@ -274,7 +187,127 @@
           ]
         },
         {
-          "name": "Partage — Métadonnées publiques (US02)",
+          "name": "8. Upload fichier — sans mot de passe (US01)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/files/upload", "host": ["{{base_url}}"], "path": ["files", "upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file",         "type": "file", "src": [] },
+                { "key": "expiry_hours", "type": "text", "value": "48" }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('share_url et file_id stockés', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('share_url');",
+                  "  pm.expect(body).to.have.property('share_token');",
+                  "  pm.expect(body.is_expired).to.be.false;",
+                  "  pm.collectionVariables.set('share_token', body.share_token);",
+                  "  pm.collectionVariables.set('file_id', body.id);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "9. Upload fichier — avec mot de passe (US09)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/files/upload", "host": ["{{base_url}}"], "path": ["files", "upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file",         "type": "file", "src": [] },
+                { "key": "expiry_hours", "type": "text", "value": "24" },
+                { "key": "password",     "type": "text", "value": "secret123" }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('Fichier protégé par mot de passe', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.is_password_protected).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10. Upload — Extension interdite .exe → 403",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{base_url}}/files/upload", "host": ["{{base_url}}"], "path": ["files", "upload"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file", "type": "file", "src": [] }
+              ]
+            },
+            "description": "Sélectionner un fichier .exe dans le file picker"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 403 extension interdite', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "11. Upload anonyme — sans compte (US07)",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{base_url}}/files/upload/anonymous", "host": ["{{base_url}}"], "path": ["files", "upload", "anonymous"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "file",         "type": "file", "src": [] },
+                { "key": "expiry_hours", "type": "text", "value": "24" }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('share_url présent — pas de compte requis', () => {",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body).to.have.property('share_url');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "12. Métadonnées publiques — lien valide (US02)",
           "request": {
             "method": "GET",
             "url": { "raw": "{{base_url}}/files/share/{{share_token}}", "host": ["{{base_url}}"], "path": ["files", "share", "{{share_token}}"] }
@@ -286,7 +319,7 @@
               "script": {
                 "exec": [
                   "pm.test('Status 200', () => pm.response.to.have.status(200));",
-                  "pm.test('Métadonnées sans chemin disque', () => {",
+                  "pm.test('Métadonnées sans données sensibles', () => {",
                   "  const body = pm.response.json();",
                   "  pm.expect(body).to.have.property('original_name');",
                   "  pm.expect(body).to.have.property('size');",
@@ -300,7 +333,25 @@
           ]
         },
         {
-          "name": "Téléchargement — Lien valide (US02)",
+          "name": "13. Métadonnées publiques — token inconnu → 404",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{base_url}}/files/share/token-inexistant", "host": ["{{base_url}}"], "path": ["files", "share", "token-inexistant"] }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 404 token inconnu', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "14. Téléchargement — lien valide (US02)",
           "request": {
             "method": "GET",
             "url": { "raw": "{{base_url}}/files/download/{{share_token}}", "host": ["{{base_url}}"], "path": ["files", "download", "{{share_token}}"] }
@@ -321,7 +372,7 @@
           ]
         },
         {
-          "name": "Téléchargement — Token invalide (404)",
+          "name": "15. Téléchargement — token inconnu → 404",
           "request": {
             "method": "GET",
             "url": { "raw": "{{base_url}}/files/download/token-inexistant", "host": ["{{base_url}}"], "path": ["files", "download", "token-inexistant"] }
@@ -339,11 +390,11 @@
           ]
         },
         {
-          "name": "Suppression — Fichier propriétaire (US06)",
+          "name": "16. Suppression — propriétaire (US06)",
           "request": {
             "method": "DELETE",
             "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
-            "url": { "raw": "{{base_url}}/files/ID_DU_FICHIER", "host": ["{{base_url}}"], "path": ["files", "ID_DU_FICHIER"] }
+            "url": { "raw": "{{base_url}}/files/{{file_id}}", "host": ["{{base_url}}"], "path": ["files", "{{file_id}}"] }
           },
           "response": [],
           "event": [
@@ -358,10 +409,10 @@
           ]
         },
         {
-          "name": "Suppression — Sans token (401)",
+          "name": "17. Suppression — sans token → 401",
           "request": {
             "method": "DELETE",
-            "url": { "raw": "{{base_url}}/files/ID_DU_FICHIER", "host": ["{{base_url}}"], "path": ["files", "ID_DU_FICHIER"] }
+            "url": { "raw": "{{base_url}}/files/{{file_id}}", "host": ["{{base_url}}"], "path": ["files", "{{file_id}}"] }
           },
           "response": [],
           "event": [

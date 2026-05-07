@@ -16,7 +16,7 @@
 
     <div class="hero">
       <div class="card upload-card">
-        <h2 class="upload-title">Ajouter un fichier</h2>
+        <h1 class="upload-title">Ajouter un fichier</h1>
 
         <!-- ── Vue résultat (après upload) ── -->
         <template v-if="shareUrl">
@@ -65,17 +65,18 @@
             </div>
             <button class="btn-orange-outline btn-sm" @click="fileInput.click()">Changer</button>
           </div>
-          <div v-else class="drop-zone" @click="fileInput.click()"
+          <button v-else type="button" class="drop-zone" @click="fileInput.click()"
             @dragover.prevent="dragging=true" @dragleave.prevent="dragging=false"
-            @drop.prevent="onDrop" :class="{ dragging }">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#B3B3B3" stroke-width="1.5">
+            @drop.prevent="onDrop" :class="{ dragging }"
+            aria-label="Sélectionner un fichier à envoyer">
+            <svg aria-hidden="true" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#767676" stroke-width="1.5">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
               <polyline points="17 8 12 3 7 8"/>
               <line x1="12" y1="3" x2="12" y2="15"/>
             </svg>
             <p>Glissez un fichier ou <strong>cliquez ici</strong></p>
-          </div>
-          <input ref="fileInput" type="file" hidden @change="onFileChange" />
+          </button>
+          <input ref="fileInput" type="file" hidden aria-label="Sélectionner un fichier" @change="onFileChange" />
 
           <!-- Champs -->
           <div class="upload-fields">
@@ -96,15 +97,16 @@
               <label for="up-tags">Tags (optionnel)</label>
               <input id="up-tags" type="text" v-model="tagsInput"
                 placeholder="ex: client, facture, urgent"
+                aria-describedby="tags-hint"
                 @keydown.enter.prevent="addTag"
                 @keydown.comma.prevent="addTag" />
               <div v-if="tags.length" class="tags-row">
                 <span v-for="tag in tags" :key="tag" class="tag-chip">
                   {{ tag }}
-                  <button class="tag-remove" @click="removeTag(tag)">×</button>
+                  <button class="tag-remove" @click="removeTag(tag)" :aria-label="'Supprimer le tag ' + tag">×</button>
                 </span>
               </div>
-              <p class="field-hint">Appuyez sur Entrée ou virgule pour ajouter</p>
+              <p id="tags-hint" class="field-hint">Appuyez sur Entrée ou virgule pour ajouter</p>
             </div>
           </div>
 
@@ -114,7 +116,7 @@
           </div>
 
           <!-- Erreur -->
-          <div v-if="uploadError" class="alert alert-error">{{ uploadError }}</div>
+          <div v-if="uploadError" role="alert" class="alert alert-error">{{ uploadError }}</div>
 
           <button class="btn-orange-solid"
             :disabled="!selectedFile || uploading"
@@ -283,7 +285,8 @@ function formatSize(bytes) {
 .drop-zone {
   border: 2px dashed #D9D9D9; border-radius: 8px; padding: 32px 24px;
   text-align: center; cursor: pointer; display: flex; flex-direction: column;
-  align-items: center; gap: 8px; color: #888;
+  align-items: center; gap: 8px; color: #595959;
+  background: #fff;
   font-family: 'DM Sans', sans-serif; transition: border-color .2s;
 }
 .drop-zone.dragging { border-color: var(--orange); }
@@ -292,7 +295,7 @@ function formatSize(bytes) {
 .selected-file-left { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; }
 .file-icon { width: 24px; height: 24px; flex-shrink: 0; color: #555; }
 .sel-name { font-family: 'Inter', sans-serif; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px; }
-.sel-size { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #888; }
+.sel-size { font-family: 'DM Sans', sans-serif; font-size: 12px; color: #767676; }
 .btn-sm { padding: 6px 12px; font-size: 13px; }
 
 .upload-fields { display: flex; flex-direction: column; gap: 12px; }
@@ -322,12 +325,12 @@ function formatSize(bytes) {
 .result-actions { display: flex; gap: 12px; }
 .result-actions > * { flex: 1; justify-content: center; }
 
-.btn-ghost { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #888; text-decoration: underline; padding: 4px 0; align-self: center; }
+.btn-ghost { background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; color: #767676; text-decoration: underline; padding: 4px 0; align-self: center; }
 
 .tags-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.tag-chip { display: inline-flex; align-items: center; gap: 4px; background: #FFF3EB; border: 1px solid var(--orange, #FF812D); color: var(--orange, #FF812D); border-radius: 99px; padding: 2px 10px; font-size: 12px; }
-.tag-remove { background: none; border: none; cursor: pointer; color: var(--orange, #FF812D); font-size: 14px; padding: 0; }
-.field-hint { font-size: 11px; color: #999; margin-top: 4px; font-family: 'Inter', sans-serif; }
+.tag-chip { display: inline-flex; align-items: center; gap: 4px; background: #FFF3EB; border: 1px solid #B35400; color: #B35400; border-radius: 99px; padding: 2px 10px; font-size: 12px; }
+.tag-remove { background: none; border: none; cursor: pointer; color: #B35400; font-size: 14px; padding: 0; }
+.field-hint { font-size: 11px; color: #767676; margin-top: 4px; font-family: 'Inter', sans-serif; }
 
 .page-footer { padding: 16px 24px; font-family: 'Inter', sans-serif; font-size: 14px; color: #fff; flex-shrink: 0; text-align: center; }
 </style>

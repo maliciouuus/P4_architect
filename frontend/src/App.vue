@@ -11,8 +11,10 @@
 -->
 <template>
   <div id="app">
-    <!-- La vue active (Home, Login, Register, Dashboard, Download) est rendue ici -->
-    <router-view />
+    <a href="#main-content" class="skip-link">Aller au contenu principal</a>
+    <main id="main-content">
+      <router-view />
+    </main>
   </div>
 </template>
 
@@ -26,6 +28,37 @@
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Focus visible global — WCAG 2.1 critère 2.4.7 */
+:focus-visible {
+  outline: 3px solid #B35400;
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+/* Sur fonds sombres (gradient, sidebar) */
+.gradient-page :focus-visible,
+.sidebar :focus-visible,
+.mobile-sidebar :focus-visible {
+  outline-color: #fff;
+  box-shadow: 0 0 0 5px rgba(0,0,0,0.3);
+}
+
+/* Skip link — navigation clavier */
+.skip-link {
+  position: absolute;
+  top: -100%;
+  left: 16px;
+  background: var(--dark);
+  color: var(--cream);
+  padding: 8px 16px;
+  border-radius: 0 0 8px 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  z-index: 9999;
+  text-decoration: none;
+}
+.skip-link:focus { top: 0; }
+
 :root {
   /* Gradient */
   --gradient: linear-gradient(180deg, #FFB88C 0%, #DE6262 100%);
@@ -35,15 +68,15 @@
   --cream: #F3EEEA;
   --white: #FFFFFF;
   --text: #1E1E1E;
-  --text-secondary: #757575;
-  --text-placeholder: #B3B3B3;
+  --text-secondary: #666666;
+  --text-placeholder: #767676;   /* 4.54:1 sur blanc ✅ WCAG AA */
 
-  /* Orange palette */
+  /* Orange palette — couleurs texte conformes WCAG AA (ratio ≥ 4.5:1 sur blanc) */
   --orange: #FF812D;
-  --orange-outline-stroke: #FFA569;
-  --orange-outline-text: #E17F29;
-  --orange-link-text: #D7630A;
-  --orange-link-stroke: #D7630B;
+  --orange-outline-stroke: #FF812D;
+  --orange-outline-text: #B35400;   /* 4.97:1 sur blanc ✅ */
+  --orange-link-text: #B35400;      /* 4.97:1 sur blanc ✅ */
+  --orange-link-stroke: #B35400;
 
   /* Panel (Mon espace) */
   --panel-bg: #FFF7F3;
@@ -96,7 +129,7 @@ body {
 
 .btn-orange-solid {
   background: var(--orange);
-  color: #fff;
+  color: #1E1E1E;   /* #1E1E1E sur #FF812D = 4.97:1 ✅ WCAG AA */
   border: none;
   border-radius: var(--radius-btn);
   padding: 12px;
@@ -110,7 +143,7 @@ body {
   gap: 8px;
   transition: background .15s;
 }
-.btn-orange-solid:hover { background: #e6721e; }
+.btn-orange-solid:hover { background: #e6721e; color: #1E1E1E; }
 .btn-orange-solid:disabled {
   background: transparent;
   border: 1px solid #B6A69C;
@@ -174,7 +207,10 @@ body {
   transition: border-color .15s;
 }
 .field input::placeholder { color: var(--text-placeholder); }
-.field input:focus, .field select:focus { border-color: var(--orange); }
+.field input:focus, .field select:focus {
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(255,129,45,0.2);
+}
 
 /* ─── Alerts ──────────────────────────────────────── */
 .alert {

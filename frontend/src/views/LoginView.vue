@@ -9,7 +9,7 @@
       <div class="card auth-card">
         <h1 class="card-title">Connexion</h1>
 
-        <div v-if="error" class="alert alert-error">{{ error }}</div>
+        <div v-if="error" role="alert" class="alert alert-error">{{ error }}</div>
 
         <form @submit.prevent="handleLogin" class="form-stack" novalidate aria-label="Formulaire de connexion">
           <div class="field">
@@ -22,9 +22,9 @@
             <input id="login-password" v-model="password" type="password" placeholder="Saisissez votre mot de passe..."
               required aria-required="true" autocomplete="current-password" />
           </div>
-          <button type="button" class="btn-ghost-orange" @click="$router.push('/register')">
+          <router-link to="/register" class="btn-ghost-orange">
             Créer un compte
-          </button>
+          </router-link>
           <button class="btn-orange-solid" :disabled="loading">
             {{ loading ? 'Connexion…' : 'Connexion' }}
           </button>
