@@ -87,11 +87,12 @@ export class FilesService {
     // UUID v4 comme token de partage — non prédictible (US02)
     const shareToken = uuidv4();
 
-    // Déplacement atomique du fichier temporaire vers sa destination finale
-    // renameSync est atomique sur le même filesystem — pas de corruption possible
+    // Déplacement du fichier temporaire vers sa destination finale
+    // copyFileSync + unlinkSync car renameSync échoue entre volumes Docker différents
     const destDir = this.getUploadDir(user?.id ?? null);
     const destPath = path.join(destDir, `${uuidv4()}_${file.originalname}`);
-    fs.renameSync(file.path, destPath);
+    fs.copyFileSync(file.path, destPath);
+    fs.unlinkSync(file.path);
 
     // Hash bcrypt du mot de passe — chaîne vide si pas de protection (US09)
     const passwordHash = password ? await bcrypt.hash(password, 12) : '';

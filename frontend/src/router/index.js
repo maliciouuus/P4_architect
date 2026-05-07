@@ -35,6 +35,12 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
+    // Page d'upload pour les utilisateurs connectés
+    path: '/upload',
+    component: () => import('../views/UploadView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     // Page publique de téléchargement — accessible sans compte
     path: '/download/:token',
     component: () => import('../views/DownloadView.vue'),
