@@ -509,7 +509,9 @@
     <div class="card">
       <div class="card-title"><div class="card-dot"></div>Frontend — Vue.js 3 + Pinia + Vite</div>
       <div class="card-body">
-        Composition API pour une meilleure réutilisabilité. Pinia remplace Vuex avec une API plus simple et compatible TypeScript. Vite offre un démarrage serveur instantané et un HMR ultra-rapide en développement. Courbe d'apprentissage douce pour une équipe mixte.
+        Composition API pour une meilleure réutilisabilité. Pinia remplace Vuex avec une API plus simple et compatible TypeScript. Vite offre un démarrage serveur instantané et un HMR ultra-rapide en développement.<br><br>
+        <strong>6 vues :</strong> HomeView (upload anonyme intégré), LoginView, RegisterView, DashboardView (responsive mobile avec sidebar coulissante), UploadView (page dédiée upload connecté), DownloadView (téléchargement public).<br>
+        Design responsive mobile-first inspiré des maquettes Figma.
       </div>
     </div>
     <div class="card">
@@ -828,9 +830,15 @@ npm run test:cov    # Rapport de couverture HTML</pre>
   <h2>Installation rapide (Docker)</h2>
   <pre>git clone https://github.com/maliciouuus/P4_architect
 cd P4_architect
-docker compose up -d
+bash start.sh         # Démarre les 3 services Docker
 # Frontend : http://localhost:5173
 # API      : http://localhost:8000/api</pre>
+
+  <h2>Scripts disponibles</h2>
+  <pre>bash start.sh         # Démarre frontend + backend + PostgreSQL
+bash stop.sh          # Arrête proprement tous les services
+bash test_unit.sh     # Lance les 32 tests Jest + rapport de couverture
+bash test_e2e.sh      # Lance les 11 scénarios Playwright (app doit tourner)</pre>
 
   <h2>Installation développement local</h2>
   <pre># 1. Base de données

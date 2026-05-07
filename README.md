@@ -57,7 +57,7 @@ git clone https://github.com/maliciouuus/P4_architect.git
 cd P4_architect
 
 # 2. Lancer tous les services
-docker compose up -d
+bash start.sh
 
 # 3. Vérifier que tout tourne
 docker compose ps
@@ -109,6 +109,15 @@ npm run dev                # http://localhost:5173
 
 ---
 
+## Scripts de lancement
+
+```bash
+bash start.sh       # Démarre les 3 services Docker
+bash stop.sh        # Arrête proprement
+bash test_unit.sh   # 32 tests unitaires + rapport couverture
+bash test_e2e.sh    # 11 scénarios E2E Playwright (app doit tourner)
+```
+
 ## Tests
 
 ```bash
@@ -116,7 +125,7 @@ cd backend-nest
 npm test            # 32 tests unitaires
 npm run test:cov    # Rapport de couverture (78% global)
 
-# Tests E2E (nécessite docker compose up -d)
+# Tests E2E (nécessite bash start.sh avant)
 cd ../e2e
 source venv/bin/activate
 pytest -v           # 11 scénarios Playwright
@@ -134,10 +143,13 @@ P4_architect/
 │   └── Dockerfile
 ├── frontend/              # Vue.js 3 + Pinia
 │   ├── src/stores/        # État global (auth, files)
-│   ├── src/views/         # Pages (Dashboard, Download, Login, Register)
+│   ├── src/views/         # Pages (Home, Login, Register, Dashboard, Upload, Download)
 │   └── Dockerfile
-├── docs/                  # Documentation technique PDF + présentation
+├── docs/                  # Documentation technique PDF, OpenAPI, Postman, présentation
 ├── scripts/               # setup_db.sql, génération docs
+├── e2e/                   # Tests Playwright (Python)
+├── start.sh / stop.sh     # Scripts de lancement/arrêt
+├── test_unit.sh / test_e2e.sh  # Scripts de test
 ├── TESTING.md / SECURITY.md / PERF.md / MAINTENANCE.md
 └── docker-compose.yml
 ```
